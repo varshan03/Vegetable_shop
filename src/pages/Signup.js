@@ -1,22 +1,22 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Form, Input, Button, Card, Typography, Alert } from "antd";
-import { UserOutlined, LockOutlined } from "@ant-design/icons";
+import { UserOutlined, LockOutlined, MailOutlined } from "@ant-design/icons";
 import config from "../server";
-import "../App.css"; // make sure CSS is imported
+import "../App.css";
 
 const { Title } = Typography;
 
-export default function Login() {
+export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const nav = useNavigate();
 
-  async function handleLogin(values) {
+  async function handleSignup(values) {
     setLoading(true);
     setErr("");
     try {
-      const res = await fetch(`${config.baseURL}/api/login`, {
+      const res = await fetch(`${config.baseURL}/api/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
@@ -24,17 +24,10 @@ export default function Login() {
 
       if (!res.ok) {
         const t = await res.json();
-        throw new Error(t.error || "Login failed");
+        throw new Error(t.error || "Signup failed");
       }
 
-      const user = await res.json();
-      localStorage.setItem("user", JSON.stringify(user));
-      console.log(user);
-      
-      // role based routing
-      if (user.role === "admin") nav("/admin");
-      else if (user.role === "delivery") nav("/delivery");
-      else nav("/");
+      nav("/login");
     } catch (err) {
       setErr(err.message);
     } finally {
@@ -47,7 +40,7 @@ export default function Login() {
       <div className="login-card-container">
         <Card className="login-card" bordered={false}>
           <Title level={3} className="login-title">
-            🥦 Vegetable Shop — Login
+            🥦 Vegetable Shop — Signup
           </Title>
           {err && (
             <Alert
@@ -59,18 +52,30 @@ export default function Login() {
             />
           )}
           <Form
-            name="login"
+            name="signup"
             layout="vertical"
-            onFinish={handleLogin}
-            initialValues={{ email: "", password: "" }}
+            onFinish={handleSignup}
+            initialValues={{ name: "", email: "", password: "" }}
           >
+            <Form.Item
+              label="Name"
+              name="name"
+              rules={[{ required: true, message: "Please enter your name!" }]}
+            >
+              <Input
+                prefix={<UserOutlined />}
+                placeholder="Enter name"
+                size="large"
+              />
+            </Form.Item>
+
             <Form.Item
               label="Email"
               name="email"
               rules={[{ required: true, message: "Please enter your email!" }]}
             >
               <Input
-                prefix={<UserOutlined />}
+                prefix={<MailOutlined />}
                 placeholder="Enter email"
                 size="large"
               />
@@ -97,14 +102,10 @@ export default function Login() {
                 loading={loading}
                 className="login-btn"
               >
-                Login
+                Signup
               </Button>
             </Form.Item>
           </Form>
-          <div style={{ textAlign: 'center', marginTop: '16px' }}>
-            Don't have an account? <Link to="/signup">Sign up</Link>
-          </div>
-        
         </Card>
       </div>
     </div>

@@ -1,7 +1,12 @@
 // frontend/src/pages/DeliveryApp.js
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import config from '../server';
+import { Card, Button, Typography, Spin, message, Row, Col } from "antd";
+import { LogoutOutlined, ArrowRightOutlined, EnvironmentOutlined } from "@ant-design/icons";
+import config from "../server";
+import "../App.css";
+
+const { Title } = Typography;
 
 export default function DeliveryApp() {
   const [tasks, setTasks] = useState([]);
@@ -24,7 +29,7 @@ export default function DeliveryApp() {
       const data = await res.json();
       setTasks(data);
     } catch (err) {
-      console.error("Error fetching tasks:", err);
+      message.error("Error fetching tasks");
     }
     setLoading(false);
   }
@@ -36,9 +41,10 @@ export default function DeliveryApp() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
+      message.success(`Task updated to ${newStatus}`);
       fetchTasks();
     } catch (err) {
-      console.error("Update failed", err);
+      message.error("Update failed");
     }
   }
 
@@ -49,37 +55,99 @@ export default function DeliveryApp() {
     return null;
   }
 
+  function handleNavigate(customerLat, customerLng) {
+    if (!customerLat || !customerLng) {
+      message.error("Customer location not available.");
+      return;
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const url = `https://www.google.com/maps/dir/?api=1&origin=${latitude},${longitude}&destination=${customerLat},${customerLng}`;
+          window.open(url, "_blank");
+        },
+        (error) => {
+          message.error("Could not get your current location. Please enable location services.",error);
+          console.log(error);
+          
+          console.error("Geolocation error:", error);
+        }
+      );
+    } else {
+      message.error("Geolocation is not supported by this browser.");
+    }
+  }
+
   return (
-    <div className="container">
-      <header className="topbar">
-        <h2>Delivery Dashboard</h2>
-        <button
+    <div className="delivery-container">
+      {/* Header */}
+      <header className="delivery-header">
+        <Title level={3} style={{ color: "#fff", margin: 0 }}>
+          🚚 Delivery Dashboard
+        </Title>
+        <Button
+          type="primary"
+          danger
+          icon={<LogoutOutlined />}
           onClick={() => {
             localStorage.removeItem("user");
             nav("/login");
           }}
         >
           Logout
-        </button>
+        </Button>
       </header>
 
-      {loading && <p>Loading...</p>}
-
-      <div className="grid">
-        {tasks.map((t) => (
-          <div key={t.id} className="product-card">
-            <h4>Order #{t.order_id}</h4>
-            <p>Customer: {t.customer_name || "N/A"}</p>
-            <p>Total: ₹{t.total_price}</p>
-            <p>Status: <strong>{t.status}</strong></p>
-            {nextStatus(t.status) && (
-              <button onClick={() => updateTask(t.id, nextStatus(t.status))}>
-                Mark as {nextStatus(t.status)}
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
+      {/* Loading State */}
+      {loading ? (
+        <div className="center-loader">
+          <Spin size="large" />
+        </div>
+      ) : (
+        <Row gutter={[16, 16]} className="task-grid">
+          {tasks.map((t) => (
+            <Col xs={24} sm={12} md={8} lg={6} key={t.id}>
+              <Card
+                title={`Order #${t.order_id}`}
+                className="delivery-card"
+                bordered={false}
+              >
+                <p><strong>Customer:</strong> {t.customer_name || "N/A"}</p>
+                <p><strong>Address:</strong> {t.address || "N/A"}</p>
+                <p><strong>Total:</strong> ₹{t.total_price}</p>
+                <p>
+                  <strong>Status:</strong>{" "}
+                  <span className={`status-badge ${t.status}`}>
+                    {t.status}
+                  </span>
+                </p>
+                {nextStatus(t.status) && (
+                  <Button
+                    type="primary"
+                    block
+                    icon={<ArrowRightOutlined />}
+                    onClick={() => updateTask(t.id, nextStatus(t.status))}
+                  >
+                    Mark as {nextStatus(t.status)}
+                  </Button>
+                )}
+                <Button
+                  type="default"
+                  block
+                  icon={<EnvironmentOutlined />}
+                  style={{ marginTop: '10px' }}
+                  onClick={() => handleNavigate(t.latitude, t.longitude)}
+                  disabled={!t.latitude || !t.longitude}
+                >
+                  Navigate
+                </Button>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      )}
     </div>
   );
 }
