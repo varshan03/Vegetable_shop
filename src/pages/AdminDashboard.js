@@ -14,9 +14,10 @@ import {
   Modal,
   Space,
 } from "antd";
-import { UploadOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { UploadOutlined, PlusOutlined, EditOutlined, DeleteOutlined, LogoutOutlined } from "@ant-design/icons";
 import config from "../server";
 import "../App.css";
+import "../theme.css";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -135,7 +136,7 @@ export default function AdminDashboard() {
     {
       title: "Image",
       dataIndex: "image_url",
-      render: (url) => <img src={url} alt="product" style={{ width: 50, height: 50, objectFit: "cover" }} />,
+      render: (url) => <img src={`${config.baseURL}${url}`}  alt="product" style={{ width: 50, height: 50, objectFit: "cover" }} />,
     },
     {
       title: "Actions",
@@ -163,17 +164,35 @@ export default function AdminDashboard() {
 
   return (
     <div className="admin-container">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Title level={2}>Admin Dashboard</Title>
-        <Space>
-          <Button type="default" onClick={() => setOrdersVisible(!ordersVisible)}>
-            {ordersVisible ? "Hide Orders" : "Show Orders"}
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
-            Add Product
-          </Button>
-        </Space>
-      </div>
+      {/* Header */}
+      <Card className="admin-header-card" style={{ marginBottom: '24px' }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <Title level={2} style={{ margin: 0, color: '#2e7d32' }}>
+              🥦 Admin Dashboard
+            </Title>
+            <p style={{ margin: 0, color: '#757575' }}>Manage your vegetable shop</p>
+          </div>
+          <Space>
+            <Button type="default" onClick={() => setOrdersVisible(!ordersVisible)}>
+              {ordersVisible ? "Hide Orders" : "Show Orders"}
+            </Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
+              Add Product
+            </Button>
+            <Button 
+              danger 
+              icon={<LogoutOutlined />} 
+              onClick={() => {
+                localStorage.removeItem('user');
+                nav('/login');
+              }}
+            >
+              Logout
+            </Button>
+          </Space>
+        </div>
+      </Card>
 
       <Card title="Products" className="admin-card">
         <Table dataSource={products} columns={productColumns} rowKey="id" bordered pagination={{ pageSize: 5 }} />

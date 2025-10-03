@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button, Typography, InputNumber, message, Card, Input } from "antd";
 import { DeleteOutlined, ShoppingCartOutlined } from "@ant-design/icons";
 import config from "../server";
+import "../theme.css";
 
 export default function Cart() {
   const [cart, setCart] = useState([]);
@@ -146,7 +147,7 @@ export default function Cart() {
                 onChange={(e) => setAddress(e.target.value)} 
                 style={{ marginBottom: '16px' }}
               />
-              <Button type="primary" size="large" block onClick={checkout}>
+              <Button type="primary" size="large" block onClick={() => nav('/checkout')}>
                 Proceed to Checkout
               </Button>
             </Card>

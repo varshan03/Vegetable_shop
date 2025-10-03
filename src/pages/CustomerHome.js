@@ -2,8 +2,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Button, Row, Col, Typography, message, Badge } from "antd";
-import { ShoppingCartOutlined, LogoutOutlined } from "@ant-design/icons";
+import { ShoppingCartOutlined, LogoutOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import config from "../server";
+import "../theme.css";
 // import "../styles/CustomerHome.css";
 
 const { Title } = Typography;
@@ -59,6 +60,14 @@ export default function CustomerHome() {
           🥦 Vegetable Shop
         </Title>
         <div className="header-actions">
+          <Button
+            type="primary"
+            icon={<UnorderedListOutlined />}
+            onClick={() => nav("/orders")}
+            style={{ marginRight: "10px" }}
+          >
+            My Orders
+          </Button>
           <Badge count={cartCount} offset={[0, 5]}>
             <Button
               type="primary"
@@ -92,7 +101,7 @@ export default function CustomerHome() {
               cover={
                 <img
                   alt={p.name}
-                  src={p.image_url}
+                  src={`${config.baseURL}${p.image_url}`}
                   className="product-image"
                 />
               }

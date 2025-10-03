@@ -1,39 +1,218 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Card, Button, Typography, List, Divider, Row, Col, Form, Input, Radio, message, Steps } from 'antd';
+import { ShoppingCartOutlined, CreditCardOutlined, HomeOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import config from '../server';
+import '../theme.css';
+
+const { Title, Text } = Typography;
 
 export default function Checkout(){
+  const [loading, setLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [form] = Form.useForm();
   const nav = useNavigate();
   const cart = JSON.parse(localStorage.getItem('cart') || '[]');
   const user = JSON.parse(localStorage.getItem('user') || 'null');
 
-  async function placeOrder(){
-    if (!user) { alert('Login required'); nav('/login'); return; }
-    const items = cart.map(it => ({ product_id: it.product_id, quantity: it.quantity, price: it.price }));
+  async function placeOrder(values){
+    if (!user) { 
+      message.error('Login required'); 
+      nav('/login'); 
+      return; 
+    }
+    
+    setLoading(true);
+    const items = cart.map(it => ({ 
+      product_id: it.product_id, 
+      quantity: it.quantity, 
+      price: it.price 
+    }));
+    
     try {
       const res = await fetch(`${config.baseURL}/api/orders`, {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ customer_id: user.id, items })
+        method: 'POST', 
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ 
+          customer_id: user.id, 
+          items,
+          delivery_address: values.address,
+          payment_method: values.paymentMethod
+        })
       });
+      
       if (!res.ok) {
         const t = await res.json();
         throw new Error(t.error || 'Order failed');
       }
+      
       const r = await res.json();
       localStorage.removeItem('cart');
-      alert('Order placed! ID ' + r.orderId);
-      nav('/');
-    } catch(err){ alert(err.message); }
+      message.success(`Order placed successfully! Order ID: ${r.orderId}`);
+      nav('/orders');
+    } catch(err){ 
+      message.error(err.message); 
+    } finally {
+      setLoading(false);
+    }
   }
 
   const total = cart.reduce((s,i)=> s + i.quantity * i.price, 0);
+  const deliveryFee = total > 500 ? 0 : 40;
+  const finalTotal = total + deliveryFee;
+
+  if (cart.length === 0) {
+    return (
+      <div className="checkout-container">
+        <Card className="empty-checkout-card">
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <ShoppingCartOutlined style={{ fontSize: '64px', color: '#bdbdbd', marginBottom: '16px' }} />
+            <Title level={3}>Your cart is empty</Title>
+            <Text type="secondary">Add some vegetables to your cart to proceed with checkout</Text>
+            <br />
+            <Button type="primary" size="large" onClick={() => nav('/')} style={{ marginTop: '16px' }}>
+              Continue Shopping
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  const steps = [
+    {
+      title: 'Order Review',
+      icon: <ShoppingCartOutlined />,
+    },
+    {
+      title: 'Delivery Details',
+      icon: <HomeOutlined />,
+    },
+    {
+      title: 'Payment',
+      icon: <CreditCardOutlined />,
+    },
+    {
+      title: 'Confirmation',
+      icon: <CheckCircleOutlined />,
+    },
+  ];
 
   return (
-    <div className="card">
-      <h3>Checkout</h3>
-      <div>Items: {cart.length}</div>
-      <div>Total: ₹{total.toFixed(2)}</div>
-      <button onClick={placeOrder}>Place Order</button>
+    <div className="checkout-container">
+      <Card className="checkout-header-card">
+        <Title level={2} style={{ textAlign: 'center', marginBottom: '24px' }}>
+          🛒 Checkout
+        </Title>
+        <Steps current={currentStep} items={steps} />
+      </Card>
+
+      <Row gutter={[24, 24]}>
+        <Col xs={24} lg={16}>
+          <Card title="Order Summary" className="checkout-card">
+            <List
+              dataSource={cart}
+              renderItem={(item) => (
+                <List.Item>
+                  <List.Item.Meta
+                    avatar={
+                      <img 
+                        src={`${config.baseURL}${item.image_url}`} 
+                        alt={item.name}
+                        style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }}
+                      />
+                    }
+                    title={item.name}
+                    description={`Quantity: ${item.quantity}`}
+                  />
+                  <Text strong>₹{(item.price * item.quantity).toFixed(2)}</Text>
+                </List.Item>
+              )}
+            />
+          </Card>
+
+          <Card title="Delivery & Payment Details" className="checkout-card">
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={placeOrder}
+              initialValues={{
+                paymentMethod: 'cod'
+              }}
+            >
+              <Form.Item
+                label="Delivery Address"
+                name="address"
+                rules={[{ required: true, message: 'Please enter your delivery address!' }]}
+              >
+                <Input.TextArea
+                  rows={3}
+                  placeholder="Enter your complete delivery address"
+                />
+              </Form.Item>
+
+              <Form.Item
+                label="Payment Method"
+                name="paymentMethod"
+                rules={[{ required: true, message: 'Please select a payment method!' }]}
+              >
+                <Radio.Group>
+                  <Radio value="cod">Cash on Delivery</Radio>
+                  <Radio value="online">Online Payment</Radio>
+                </Radio.Group>
+              </Form.Item>
+
+              <Form.Item>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  size="large"
+                  loading={loading}
+                  block
+                  style={{ height: '48px', fontSize: '16px', fontWeight: '600' }}
+                >
+                  Place Order - ₹{finalTotal.toFixed(2)}
+                </Button>
+              </Form.Item>
+            </Form>
+          </Card>
+        </Col>
+
+        <Col xs={24} lg={8}>
+          <Card title="Order Total" className="checkout-summary-card">
+            <div className="summary-row">
+              <Text>Subtotal ({cart.length} items)</Text>
+              <Text strong>₹{total.toFixed(2)}</Text>
+            </div>
+            <div className="summary-row">
+              <Text>Delivery Fee</Text>
+              <Text strong style={{ color: deliveryFee === 0 ? '#4caf50' : undefined }}>
+                {deliveryFee === 0 ? 'FREE' : `₹${deliveryFee.toFixed(2)}`}
+              </Text>
+            </div>
+            {total < 500 && (
+              <Text type="secondary" style={{ fontSize: '12px' }}>
+                Add ₹{(500 - total).toFixed(2)} more for free delivery
+              </Text>
+            )}
+            <Divider />
+            <div className="summary-row total-row">
+              <Title level={4} style={{ margin: 0 }}>Total</Title>
+              <Title level={4} style={{ margin: 0, color: '#4caf50' }}>₹{finalTotal.toFixed(2)}</Title>
+            </div>
+          </Card>
+
+          <Card className="checkout-info-card">
+            <Title level={5}>🚚 Delivery Information</Title>
+            <Text type="secondary">
+              • Estimated delivery: 30-45 minutes<br/>
+              • Free delivery on orders above ₹500<br/>
+              • Fresh vegetables guaranteed<br/>
+              • Cash on delivery available
+            </Text>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 }

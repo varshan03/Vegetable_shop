@@ -4,6 +4,7 @@ import { Form, Input, Button, Card, Typography, Alert } from "antd";
 import { UserOutlined, LockOutlined, MailOutlined } from "@ant-design/icons";
 import config from "../server";
 import "../App.css";
+import "../theme.css";
 
 const { Title } = Typography;
 

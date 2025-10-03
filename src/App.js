@@ -8,6 +8,7 @@ import Checkout from './pages/Checkout';
 import AdminDashboard from './pages/AdminDashboard';
 import DeliveryApp from './pages/DeliveryApp';
 import Orders from './pages/Orders';
+import DeliveryTracking from './pages/DeliveryTracking';
 import './App.css';
 
 function App(){
@@ -24,6 +25,7 @@ function App(){
         <Route path="/admin" element={ <AdminDashboard/> } />
         <Route path="/delivery" element={ <DeliveryApp/>  } />
         <Route path="/orders" element={ user ? <Orders/> : <Navigate to="/login" /> } />
+        <Route path="/track/:orderId" element={ user ? <DeliveryTracking/> : <Navigate to="/login" /> } />
       </Routes>
     </BrowserRouter>
   );

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Spin, Typography, message, List, Tag, Avatar } from "antd";
+import { Card, Spin, Typography, message, List, Tag, Avatar, Button } from "antd";
+import { ArrowLeftOutlined } from "@ant-design/icons";
 import config from "../server";
+import "../theme.css";
 
 const { Title, Text } = Typography;
 
@@ -43,7 +45,17 @@ export default function Orders() {
   
   return (
     <div className="orders-container">
-      <Title level={2}>My Orders</Title>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
+        <Button 
+          type="text" 
+          icon={<ArrowLeftOutlined />} 
+          onClick={() => nav('/')}
+          style={{ marginRight: '16px' }}
+        >
+          Back to Home
+        </Button>
+        <Title level={2} style={{ margin: 0 }}>🛍️ My Orders</Title>
+      </div>
       {orders.length === 0 ? (
         <Card><Text>You have no orders.</Text></Card>
       ) : (
@@ -75,7 +87,7 @@ export default function Orders() {
                       renderItem={item => (
                         <List.Item className="order-list-item">
                           <List.Item.Meta
-                            avatar={<Avatar src={item.image_url} />}
+                            avatar={<Avatar src={`${config.baseURL}${item.image_url}`} />}
                             title={item.name}
                             description={`Price: ₹${item.price} | Qty: ${item.quantity}`}
                           />
@@ -86,6 +98,15 @@ export default function Orders() {
                     <div className="order-total-new">
                       <strong>Total:</strong>
                       <strong>₹{order.total_price}</strong>
+                    </div>
+                    <div style={{ marginTop: '12px', textAlign: 'center' }}>
+                      <Button 
+                        type="primary" 
+                        onClick={() => nav(`/track/${order.order_id}`)}
+                        disabled={order.status === 'delivered' || order.status === 'cancelled'}
+                      >
+                        Track Order
+                      </Button>
                     </div>
                   </div>
                 </Card>
