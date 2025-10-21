@@ -226,16 +226,30 @@ export default function DeliveryTracking() {
                 <Title level={4} style={{ marginTop: '12px' }}>
                   {order.delivery_partner.name}
                 </Title>
-                <Text type="secondary">Delivery Partner</Text>
+                
+                 {order.delivery_partner.phone ? (
+      <Text strong style={{ color: "#555" }}>
+        📞 {order.delivery_partner.phone}
+      </Text>
+    ) : (
+      <Text type="secondary">No contact available</Text>
+    )}
                 <br />
-                <Button 
-                  type="primary" 
-                  icon={<PhoneOutlined />} 
-                  style={{ marginTop: '12px' }}
-                  block
-                >
-                  Call Partner
-                </Button>
+             <Button
+  type="primary"
+  icon={<PhoneOutlined />}
+  style={{ marginTop: "12px" }}
+  block
+  disabled={!order.delivery_partner?.phone}
+  onClick={() => {
+    if (order.delivery_partner?.phone) {
+      // ✅ Automatically open dialer on mobile
+      window.location.href = `tel:${order.delivery_partner.phone}`;
+    }
+  }}
+>
+  Call Partner
+</Button>
               </div>
             </Card>
           )}

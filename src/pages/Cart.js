@@ -101,7 +101,7 @@ export default function Cart() {
             {cart.map(item => (
               <Card key={item.product_id} className="cart-item-card">
                 <div className="cart-item-content">
-                  <img src={item.image_url} alt={item.name} className="cart-item-image" />
+                  <img src={`${config.baseURL}${item.image_url}`} alt={item.name} className="cart-item-image" />
                   <div className="cart-item-details">
                     <Title level={5}>{item.name}</Title>
                     <Text>Price: ₹{item.price}</Text>

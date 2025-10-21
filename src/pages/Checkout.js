@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Button, Typography, List, Divider, Row, Col, Form, Input, Radio, message, Steps } from 'antd';
 import { ShoppingCartOutlined, CreditCardOutlined, HomeOutlined, CheckCircleOutlined } from '@ant-design/icons';
@@ -10,10 +10,40 @@ const { Title, Text } = Typography;
 export default function Checkout(){
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [location, setLocation] = useState({ latitude: null, longitude: null, error: null });
   const [form] = Form.useForm();
   const nav = useNavigate();
   const cart = JSON.parse(localStorage.getItem('cart') || '[]');
   const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            error: null,
+          });
+        },
+        (error) => {
+          setLocation({
+            latitude: null,
+            longitude: null,
+            error: 'Unable to retrieve your location. Please enable location services for better delivery experience.'
+          });
+          console.error('Geolocation error:', error);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+      );
+    } else {
+      setLocation({
+        latitude: null,
+        longitude: null,
+        error: 'Geolocation is not supported by your browser.'
+      });
+    }
+  }, []);
 
   async function placeOrder(values){
     if (!user) { 
@@ -30,15 +60,23 @@ export default function Checkout(){
     }));
     
     try {
+      const orderData = {
+        user_id: user.id,
+        items,
+        delivery_address: values.address,
+        payment_method: values.paymentMethod,
+      };
+
+      // Add location if available
+      if (location.latitude && location.longitude) {
+        orderData.latitude = location.latitude;
+        orderData.longitude = location.longitude;
+      }
+
       const res = await fetch(`${config.baseURL}/api/orders`, {
         method: 'POST', 
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ 
-          customer_id: user.id, 
-          items,
-          delivery_address: values.address,
-          payment_method: values.paymentMethod
-        })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(orderData)
       });
       
       if (!res.ok) {
@@ -140,10 +178,21 @@ export default function Checkout(){
                 paymentMethod: 'cod'
               }}
             >
+              {location.error && (
+                <div style={{ color: '#ff4d4f', marginBottom: '16px' }}>
+                  {location.error}
+                </div>
+              )}
+              {location.latitude && location.longitude && (
+                <div style={{ color: '#52c41a', marginBottom: '16px' }}>
+                  Location detected: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                </div>
+              )}
               <Form.Item
                 label="Delivery Address"
                 name="address"
                 rules={[{ required: true, message: 'Please enter your delivery address!' }]}
+                extra="Please ensure your address is accurate for smooth delivery"
               >
                 <Input.TextArea
                   rows={3}

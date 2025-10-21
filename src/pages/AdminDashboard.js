@@ -9,17 +9,18 @@ import {
   Typography,
   Select,
   Form,
+  Tag,
   Upload,
   message,
   Modal,
   Space,
 } from "antd";
-import { UploadOutlined, PlusOutlined, EditOutlined, DeleteOutlined, LogoutOutlined } from "@ant-design/icons";
+import { UploadOutlined, PlusOutlined, EditOutlined, DeleteOutlined, LogoutOutlined , UserOutlined} from "@ant-design/icons";
 import config from "../server";
 import "../App.css";
 import "../theme.css";
 
-const { Title } = Typography;
+const { Title,Text  } = Typography;
 const { Option } = Select;
 
 export default function AdminDashboard() {
@@ -117,7 +118,12 @@ export default function AdminDashboard() {
       },
     });
   }
-
+  const statusColors = {
+    pending: "orange",
+    delivered: "green",
+    cancelled: "red",
+    processing: "blue",
+  };
   async function assignOrder(orderId, deliveryId) {
     await fetch(`${config.baseURL}/api/orders/assign`, {
       method: "POST",
@@ -198,20 +204,58 @@ export default function AdminDashboard() {
         <Table dataSource={products} columns={productColumns} rowKey="id" bordered pagination={{ pageSize: 5 }} />
       </Card>
 
-      {ordersVisible && (
-        <Card title="Orders" className="admin-card">
-          <Table dataSource={orders} rowKey="id" bordered pagination={{ pageSize: 5 }}>
-            <Table.Column title="ID" dataIndex="id" />
-            <Table.Column title="Customer" dataIndex="customer_id" />
-            <Table.Column title="Total" dataIndex="total_price" render={(val) => `₹${val}`} />
-            <Table.Column title="Status" dataIndex="status" />
+        {ordersVisible && (
+        <Card
+          title={
+            <Space>
+              <UserOutlined style={{ color: "#1890ff" }} />
+              <Title level={4} style={{ margin: 0 }}>
+                Orders
+              </Title>
+            </Space>
+          }
+          className="admin-card"
+          bordered={false}
+          style={{
+            boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+            borderRadius: 12,
+            background: "#fff",
+          }}
+        >
+          <Table
+            dataSource={orders}
+            rowKey="id"
+            bordered={false}
+            pagination={{ pageSize: 5 }}
+          >
+            <Table.Column title="Order ID" dataIndex="id" />
+            <Table.Column
+              title="Customer"
+              dataIndex="customer_name"
+              render={(val) => <Text strong>{val}</Text>}
+            />
+            <Table.Column
+              title="Total"
+              dataIndex="total_price"
+              render={(val) => <Text>₹{val}</Text>}
+            />
+            <Table.Column
+              title="Status"
+              dataIndex="status"
+              render={(status) => (
+                <Tag color={statusColors[status] || "default"} style={{ textTransform: "capitalize" }}>
+                  {status}
+                </Tag>
+              )}
+            />
             <Table.Column
               title="Assign Delivery"
               render={(text, record) => (
                 <Select
-                  placeholder="Select Delivery"
-                  style={{ width: 150 }}
+                  placeholder="Select Delivery Person"
+                  style={{ width: 180 }}
                   onChange={(val) => assignOrder(record.id, val)}
+                  showSearch
                 >
                   {users.map((u) => (
                     <Option key={u.id} value={u.id}>
