@@ -57,7 +57,7 @@ export default function CustomerHome() {
       {/* ---------- Header ---------- */}
       <header className="customer-header">
         <Title level={3} className="shop-title">
-          🥦 Vegetable Shop
+        Vegetable Shop
         </Title>
         <div className="header-actions">
           <Button

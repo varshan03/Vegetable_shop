@@ -6,6 +6,7 @@ import {
   Card,
   Button,
   Input,
+  Image,
   Typography,
   Select,
   Form,
@@ -76,6 +77,9 @@ export default function AdminDashboard() {
       const productsData = await productsRes.json();
       const ordersData = await ordersRes.json();
       const usersData = await usersRes.json();
+
+      console.log(productsData,ordersData,usersData);
+      
       
       setStats({
         totalProducts: productsData.length,
@@ -94,56 +98,75 @@ export default function AdminDashboard() {
     nav("/login");
   };
 
-  const productColumns = [
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: 'Price',
-      dataIndex: 'price',
-      key: 'price',
-      render: (price) => {
-        // Handle undefined, null, or empty values
-        if (price === undefined || price === null || price === '') {
-          return '₹0.00';
+const productColumns = [
+  {
+    title: "Image",
+    dataIndex: "image_url",
+    key: "image_url",
+    render: (image_url) => (
+      <Image
+        width={60}
+        height={60}
+        src={
+          image_url
+            ? `http://localhost:4000${image_url}` // 🔹 Adjust this base URL to match your backend
+            : "https://via.placeholder.com/60"
         }
-        // Convert price to number and handle potential non-numeric values
-        const priceNum = Number(price);
-        return `₹${!isNaN(priceNum) ? priceNum.toFixed(2) : '0.00'}`;
-      },
+        alt="Product"
+        style={{
+          objectFit: "cover",
+          borderRadius: "8px",
+          boxShadow: "0 0 4px rgba(0,0,0,0.15)",
+        }}
+      />
+    ),
+  },
+  {
+    title: "Name",
+    dataIndex: "name",
+    key: "name",
+  },
+  {
+    title: "Price",
+    dataIndex: "price",
+    key: "price",
+    render: (price) => {
+      if (price === undefined || price === null || price === "") {
+        return "₹0.00";
+      }
+      const priceNum = Number(price);
+      return `₹${!isNaN(priceNum) ? priceNum.toFixed(2) : "0.00"}`;
     },
-    {
-      title: 'Stock',
-      dataIndex: 'stock',
-      key: 'stock',
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_, record) => (
-        <Space size="middle">
-          <Button 
-            type="link" 
-            icon={<EditOutlined />} 
-            onClick={() => handleEditProduct(record)}
-          >
-            Edit
-          </Button>
-          <Button 
-            type="link" 
-            danger 
-            icon={<DeleteOutlined />} 
-            onClick={() => handleDeleteProduct(record.id)}
-          >
-            Delete
-          </Button>
-        </Space>
-      ),
-    },
-  ];
-
+  },
+  {
+    title: "Stock",
+    dataIndex: "stock",
+    key: "stock",
+  },
+  {
+    title: "Actions",
+    key: "actions",
+    render: (_, record) => (
+      <Space size="middle">
+        <Button
+          type="link"
+          icon={<EditOutlined />}
+          onClick={() => handleEditProduct(record)}
+        >
+          Edit
+        </Button>
+        <Button
+          type="link"
+          danger
+          icon={<DeleteOutlined />}
+          onClick={() => handleDeleteProduct(record.id)}
+        >
+          Delete
+        </Button>
+      </Space>
+    ),
+  },
+];
   const handleEditProduct = (product) => {
     setEditingProduct(product);
     form.setFieldsValue({
@@ -172,7 +195,7 @@ export default function AdminDashboard() {
     <div className="admin-container">
       <Card className="admin-header">
         <div className="header-content">
-          <Title level={3} style={{ margin: 0 }}>Admin Dashboard</Title>
+          <Title level={3} style={{ margin: 5 }}>Admin Dashboard</Title>
           <Space>
             <Button 
               type="primary" 
@@ -192,7 +215,7 @@ export default function AdminDashboard() {
         </div>
       </Card>
 
-      <div className="dashboard-stats">
+      <div className="dashboard-stats" style={{marginTop:'10px'}}>
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} md={8}>
             <Card 

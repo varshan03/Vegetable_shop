@@ -21,7 +21,8 @@ export default function DeliveryTracking() {
   const [loading, setLoading] = useState(true);
   const nav = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || 'null');
-
+  console.log(orderId);
+  
   useEffect(() => {
     if (!user) {
       nav('/login');
