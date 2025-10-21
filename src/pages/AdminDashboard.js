@@ -14,25 +14,34 @@ import {
   message,
   Modal,
   Space,
+  Row,
+  Col
 } from "antd";
-import { UploadOutlined, PlusOutlined, EditOutlined, DeleteOutlined, LogoutOutlined , UserOutlined} from "@ant-design/icons";
+import { 
+  UploadOutlined, 
+  PlusOutlined, 
+  EditOutlined, 
+  DeleteOutlined, 
+  LogoutOutlined, 
+  ShoppingOutlined, 
+  TeamOutlined,
+  ShoppingCartOutlined
+} from "@ant-design/icons";
 import config from "../server";
 import "../App.css";
 import "../theme.css";
 
-const { Title,Text  } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 
 export default function AdminDashboard() {
   const [products, setProducts] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [stats, setStats] = useState({ totalProducts: 0, totalOrders: 0, totalUsers: 0 });
   const [form] = Form.useForm();
   const [imageFile, setImageFile] = useState(null);
   const [fileList, setFileList] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [ordersVisible, setOrdersVisible] = useState(false);
   const nav = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
@@ -42,125 +51,92 @@ export default function AdminDashboard() {
       return;
     }
     loadProducts();
-    loadOrders();
-    loadUsers();
+    loadStats();
   }, []);
 
   async function loadProducts() {
-    const res = await fetch(`${config.baseURL}/api/products`);
-    const data = await res.json();
-    setProducts(data);
-  }
-
-  async function loadOrders() {
-    const res = await fetch(`${config.baseURL}/api/orders`);
-    const data = await res.json();
-    setOrders(data);
-  }
-
-  async function loadUsers() {
-    const res = await fetch(`${config.baseURL}/api/delivery/person`);
-    const data = await res.json();
-    setUsers(data);
-  }
-
-  async function handleSave(values) {
     try {
-      const formData = new FormData();
-      formData.append("name", values.name);
-      formData.append("price", values.price);
-      formData.append("stock", values.stock);
-      if (imageFile) formData.append("image", imageFile);
-
-      let res;
-      if (editingProduct) {
-        // Update product
-        res = await fetch(`${config.baseURL}/api/products/${editingProduct.id}`, {
-          method: "PUT",
-          body: formData,
-        });
-      } else {
-        // Add product
-        res = await fetch(`${config.baseURL}/api/products`, {
-          method: "POST",
-          body: formData,
-        });
-      }
-
-      if (res.ok) {
-        message.success(editingProduct ? "Product updated!" : "Product added!");
-        setModalVisible(false);
-        form.resetFields();
-        setImageFile(null);
-        setFileList([]);
-        setEditingProduct(null);
-        loadProducts();
-      } else {
-        message.error("Failed to save product");
-      }
+      const res = await fetch(`${config.baseURL}/api/products`);
+      const data = await res.json();
+      setProducts(data);
     } catch (err) {
-      console.error(err);
-      message.error("Something went wrong");
+      console.error('Error loading products:', err);
+      message.error('Failed to load products');
     }
   }
 
-  async function deleteProduct(id) {
-    Modal.confirm({
-      title: "Delete product?",
-      content: "This action cannot be undone.",
-      okText: "Yes, Delete",
-      okType: "danger",
-      cancelText: "Cancel",
-      onOk: async () => {
-        await fetch(`${config.baseURL}/api/products/${id}`, { method: "DELETE" });
-        message.success("Product deleted!");
-        loadProducts();
-      },
-    });
-  }
-  const statusColors = {
-    pending: "orange",
-    delivered: "green",
-    cancelled: "red",
-    processing: "blue",
-  };
-  async function assignOrder(orderId, deliveryId) {
-    await fetch(`${config.baseURL}/api/orders/assign`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ delivery_person_id: deliveryId, order_id: orderId }),
-    });
-    message.success("Order assigned!");
-    loadOrders();
+  async function loadStats() {
+    try {
+      const [productsRes, ordersRes, usersRes] = await Promise.all([
+        fetch(`${config.baseURL}/api/products`),
+        fetch(`${config.baseURL}/api/orders`),
+        fetch(`${config.baseURL}/api/users`)
+      ]);
+      
+      const productsData = await productsRes.json();
+      const ordersData = await ordersRes.json();
+      const usersData = await usersRes.json();
+      
+      setStats({
+        totalProducts: productsData.length,
+        totalOrders: ordersData.length,
+        totalUsers: usersData.length
+      });
+    } catch (err) {
+      console.error('Error loading stats:', err);
+      message.error('Failed to load dashboard statistics');
+    }
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    nav("/login");
+  };
+
   const productColumns = [
-    { title: "ID", dataIndex: "id" },
-    { title: "Name", dataIndex: "name" },
-    { title: "Price", dataIndex: "price", render: (val) => `₹${val}` },
-    { title: "Stock", dataIndex: "stock" },
     {
-      title: "Image",
-      dataIndex: "image_url",
-      render: (url) => <img src={`${config.baseURL}${url}`}  alt="product" style={{ width: 50, height: 50, objectFit: "cover" }} />,
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
     },
     {
-      title: "Actions",
+      title: 'Price',
+      dataIndex: 'price',
+      key: 'price',
+      render: (price) => {
+        // Handle undefined, null, or empty values
+        if (price === undefined || price === null || price === '') {
+          return '₹0.00';
+        }
+        // Convert price to number and handle potential non-numeric values
+        const priceNum = Number(price);
+        return `₹${!isNaN(priceNum) ? priceNum.toFixed(2) : '0.00'}`;
+      },
+    },
+    {
+      title: 'Stock',
+      dataIndex: 'stock',
+      key: 'stock',
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
       render: (_, record) => (
-        <Space>
-          <Button
-            type="primary"
-            icon={<EditOutlined />}
-            onClick={() => {
-              setEditingProduct(record);
-              setModalVisible(true);
-              form.setFieldsValue(record);
-              setFileList([]);
-            }}
+        <Space size="middle">
+          <Button 
+            type="link" 
+            icon={<EditOutlined />} 
+            onClick={() => handleEditProduct(record)}
           >
             Edit
           </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={() => deleteProduct(record.id)}>
+          <Button 
+            type="link" 
+            danger 
+            icon={<DeleteOutlined />} 
+            onClick={() => handleDeleteProduct(record.id)}
+          >
             Delete
           </Button>
         </Space>
@@ -168,31 +144,47 @@ export default function AdminDashboard() {
     },
   ];
 
+  const handleEditProduct = (product) => {
+    setEditingProduct(product);
+    form.setFieldsValue({
+      name: product.name,
+      price: product.price,
+      stock: product.stock,
+      description: product.description,
+    });
+    setModalVisible(true);
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    try {
+      await fetch(`${config.baseURL}/api/products/${productId}`, {
+        method: 'DELETE',
+      });
+      message.success('Product deleted successfully');
+      loadProducts();
+    } catch (err) {
+      console.error('Error deleting product:', err);
+      message.error('Failed to delete product');
+    }
+  };
+
   return (
     <div className="admin-container">
-      {/* Header */}
-      <Card className="admin-header-card" style={{ marginBottom: '24px' }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <Title level={2} style={{ margin: 0, color: '#2e7d32' }}>
-              🥦 Admin Dashboard
-            </Title>
-            <p style={{ margin: 0, color: '#757575' }}>Manage your vegetable shop</p>
-          </div>
+      <Card className="admin-header">
+        <div className="header-content">
+          <Title level={3} style={{ margin: 0 }}>Admin Dashboard</Title>
           <Space>
-            <Button type="default" onClick={() => setOrdersVisible(!ordersVisible)}>
-              {ordersVisible ? "Hide Orders" : "Show Orders"}
-            </Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
-              Add Product
+            <Button 
+              type="primary" 
+              icon={<ShoppingCartOutlined />}
+              onClick={() => nav('/admin/orders')}
+            >
+              View Orders
             </Button>
             <Button 
-              danger 
+              type="default" 
               icon={<LogoutOutlined />} 
-              onClick={() => {
-                localStorage.removeItem('user');
-                nav('/login');
-              }}
+              onClick={handleLogout}
             >
               Logout
             </Button>
@@ -200,76 +192,71 @@ export default function AdminDashboard() {
         </div>
       </Card>
 
-      <Card title="Products" className="admin-card">
-        <Table dataSource={products} columns={productColumns} rowKey="id" bordered pagination={{ pageSize: 5 }} />
+      <div className="dashboard-stats">
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={8}>
+            <Card 
+              className="stat-card"
+              onClick={() => nav('/admin/orders')}
+              hoverable
+            >
+              <ShoppingOutlined className="stat-icon" style={{ color: '#1890ff' }} />
+              <div className="stat-content">
+                <Title level={3} className="stat-value">{stats.totalOrders}</Title>
+                <Text type="secondary">Total Orders</Text>
+              </div>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Card className="stat-card">
+              <ShoppingOutlined className="stat-icon" style={{ color: '#52c41a' }} />
+              <div className="stat-content">
+                <Title level={3} className="stat-value">{stats.totalProducts}</Title>
+                <Text type="secondary">Products</Text>
+              </div>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Card className="stat-card">
+              <TeamOutlined className="stat-icon" style={{ color: '#722ed1' }} />
+              <div className="stat-content">
+                <Title level={3} className="stat-value">{stats.totalUsers}</Title>
+                <Text type="secondary">Users</Text>
+              </div>
+            </Card>
+          </Col>
+        </Row>
+      </div>
+
+      <Card 
+        title={
+          <Space>
+            <Title level={4} style={{ margin: 0 }}>Products</Title>
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />} 
+              onClick={() => {
+                setEditingProduct(null);
+                form.resetFields();
+                setFileList([]);
+                setImageFile(null);
+                setModalVisible(true);
+              }}
+            >
+              Add Product
+            </Button>
+          </Space>
+        }
+        className="admin-card"
+      >
+        <Table 
+          dataSource={products} 
+          columns={productColumns} 
+          rowKey="id"
+          pagination={{ pageSize: 10 }}
+        />
       </Card>
 
-        {ordersVisible && (
-        <Card
-          title={
-            <Space>
-              <UserOutlined style={{ color: "#1890ff" }} />
-              <Title level={4} style={{ margin: 0 }}>
-                Orders
-              </Title>
-            </Space>
-          }
-          className="admin-card"
-          bordered={false}
-          style={{
-            boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-            borderRadius: 12,
-            background: "#fff",
-          }}
-        >
-          <Table
-            dataSource={orders}
-            rowKey="id"
-            bordered={false}
-            pagination={{ pageSize: 5 }}
-          >
-            <Table.Column title="Order ID" dataIndex="id" />
-            <Table.Column
-              title="Customer"
-              dataIndex="customer_name"
-              render={(val) => <Text strong>{val}</Text>}
-            />
-            <Table.Column
-              title="Total"
-              dataIndex="total_price"
-              render={(val) => <Text>₹{val}</Text>}
-            />
-            <Table.Column
-              title="Status"
-              dataIndex="status"
-              render={(status) => (
-                <Tag color={statusColors[status] || "default"} style={{ textTransform: "capitalize" }}>
-                  {status}
-                </Tag>
-              )}
-            />
-            <Table.Column
-              title="Assign Delivery"
-              render={(text, record) => (
-                <Select
-                  placeholder="Select Delivery Person"
-                  style={{ width: 180 }}
-                  onChange={(val) => assignOrder(record.id, val)}
-                  showSearch
-                >
-                  {users.map((u) => (
-                    <Option key={u.id} value={u.id}>
-                      {u.name}
-                    </Option>
-                  ))}
-                </Select>
-              )}
-            />
-          </Table>
-        </Card>
-      )}
-
-      {/* Modal for Add/Edit Product */}
       <Modal
         title={editingProduct ? "Edit Product" : "Add Product"}
         open={modalVisible}
@@ -282,35 +269,96 @@ export default function AdminDashboard() {
         }}
         footer={null}
       >
-        <Form layout="vertical" form={form} onFinish={handleSave}>
-          <Form.Item name="name" label="Name" rules={[{ required: true, message: "Enter name" }]}>
-            <Input />
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={async (values) => {
+            try {
+              const formData = new FormData();
+              Object.entries(values).forEach(([key, value]) => {
+                formData.append(key, value);
+              });
+              
+              if (imageFile) {
+                formData.append('image', imageFile);
+              }
+
+              const url = editingProduct 
+                ? `${config.baseURL}/api/products/${editingProduct.id}`
+                : `${config.baseURL}/api/products`;
+              
+              const method = editingProduct ? 'PUT' : 'POST';
+              
+              const res = await fetch(url, {
+                method,
+                body: formData,
+              });
+
+              if (!res.ok) {
+                throw new Error('Failed to save product');
+              }
+
+              message.success(`Product ${editingProduct ? 'updated' : 'added'} successfully`);
+              setModalVisible(false);
+              form.resetFields();
+              loadProducts();
+            } catch (err) {
+              console.error('Error saving product:', err);
+              message.error(err.message || 'Failed to save product');
+            }
+          }}
+        >
+          <Form.Item
+            name="name"
+            label="Product Name"
+            rules={[{ required: true, message: 'Please enter product name' }]}
+          >
+            <Input placeholder="Enter product name" />
           </Form.Item>
-          <Form.Item name="price" label="Price" rules={[{ required: true, message: "Enter price" }]}>
-            <Input />
+          
+          <Form.Item
+            name="price"
+            label="Price"
+            rules={[{ required: true, message: 'Please enter price' }]}
+          >
+            <Input type="number" step="0.01" placeholder="Enter price" />
           </Form.Item>
-          <Form.Item name="stock" label="Stock" rules={[{ required: true, message: "Enter stock" }]}>
-            <Input />
+          
+          <Form.Item
+            name="stock"
+            label="Stock"
+            rules={[{ required: true, message: 'Please enter stock' }]}
+          >
+            <Input type="number" placeholder="Enter stock quantity" />
           </Form.Item>
-          <Form.Item label="Image">
+          
+          <Form.Item
+            name="description"
+            label="Description"
+          >
+            <Input.TextArea rows={4} placeholder="Enter product description" />
+          </Form.Item>
+          
+          <Form.Item label="Product Image">
             <Upload
+              fileList={fileList}
               beforeUpload={(file) => {
                 setImageFile(file);
-                setFileList([file]);
                 return false;
               }}
               onRemove={() => {
                 setImageFile(null);
                 setFileList([]);
+                return false;
               }}
-              fileList={fileList}
             >
               <Button icon={<UploadOutlined />}>Select Image</Button>
             </Upload>
           </Form.Item>
+          
           <Form.Item>
-            <Button type="primary" htmlType="submit" block>
-              {editingProduct ? "Update Product" : "Add Product"}
+            <Button type="primary" htmlType="submit">
+              {editingProduct ? 'Update Product' : 'Add Product'}
             </Button>
           </Form.Item>
         </Form>

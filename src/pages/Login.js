@@ -1,21 +1,21 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Form, Input, Button, Card, Typography, Alert } from "antd";
+import { Form, Input, Button, Card, Typography, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import config from "../server";
-import "../App.css"; // make sure CSS is imported
+import "../App.css";
 import "../theme.css";
 
 const { Title } = Typography;
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
   const nav = useNavigate();
 
   async function handleLogin(values) {
     setLoading(true);
-    setErr("");
+    const hide = message.loading("Logging in...", 0);
+
     try {
       const res = await fetch(`${config.baseURL}/api/login`, {
         method: "POST",
@@ -23,23 +23,30 @@ export default function Login() {
         body: JSON.stringify(values),
       });
 
-      if (!res.ok) {
-        const t = await res.json();
-        throw new Error(t.error || "Login failed");
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Login failed");
 
-      const user = await res.json();
-      localStorage.setItem("user", JSON.stringify(user));
-      console.log(user);
-      
-      // role based routing
-      if (user.role === "admin") nav("/admin");
-      else if (user.role === "delivery") nav("/delivery");
+      localStorage.setItem("user", JSON.stringify(data));
+      hide();
+      message.success(`Welcome back, ${data.name || "user"}!`, 2);
+
+      // role-based navigation
+      if (data.role === "admin") nav("/admin");
+      else if (data.role === "delivery") nav("/delivery");
       else nav("/");
     } catch (err) {
-      setErr(err.message);
+      hide();
+      message.error(err.message || "Something went wrong", 3);
     } finally {
       setLoading(false);
+    }
+  }
+
+  // 🔹 This handles form validation errors (like required fields)
+  function handleValidationError(errorInfo) {
+    const firstError = errorInfo.errorFields?.[0]?.errors?.[0];
+    if (firstError) {
+      message.warning(firstError, 2); // show warning popup
     }
   }
 
@@ -50,19 +57,12 @@ export default function Login() {
           <Title level={3} className="login-title">
             🥦 Vegetable Shop — Login
           </Title>
-          {err && (
-            <Alert
-              message={err}
-              type="error"
-              showIcon
-              closable
-              style={{ marginBottom: 16 }}
-            />
-          )}
+
           <Form
             name="login"
             layout="vertical"
             onFinish={handleLogin}
+            onFinishFailed={handleValidationError} // ⬅️ shows popup for validation error
             initialValues={{ email: "", password: "" }}
           >
             <Form.Item
@@ -102,10 +102,10 @@ export default function Login() {
               </Button>
             </Form.Item>
           </Form>
-          <div style={{ textAlign: 'center', marginTop: '16px' }}>
-            Don't have an account? <Link to="/signup">Sign up</Link>
+
+          <div style={{ textAlign: "center", marginTop: 16 }}>
+            Don’t have an account? <Link to="/signup">Sign up</Link>
           </div>
-        
         </Card>
       </div>
     </div>

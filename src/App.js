@@ -6,6 +6,7 @@ import CustomerHome from './pages/CustomerHome';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminOrders from './pages/AdminOrders';
 import DeliveryApp from './pages/DeliveryApp';
 import Orders from './pages/Orders';
 import DeliveryTracking from './pages/DeliveryTracking';
@@ -22,7 +23,8 @@ function App(){
         <Route path="/" element={ user ? <CustomerHome/> : <Navigate to="/login" /> } />
         <Route path="/cart" element={ user ? <Cart/> : <Navigate to="/login" /> } />
         <Route path="/checkout" element={ user ? <Checkout/> : <Navigate to="/login" /> } />
-        <Route path="/admin" element={ <AdminDashboard/> } />
+        <Route path="/admin" element={ user && user.role === 'admin' ? <AdminDashboard/> : <Navigate to="/" /> } />
+        <Route path="/admin/orders" element={ user && user.role === 'admin' ? <AdminOrders/> : <Navigate to="/" /> } />
         <Route path="/delivery" element={ <DeliveryApp/>  } />
         <Route path="/orders" element={ user ? <Orders/> : <Navigate to="/login" /> } />
         <Route path="/track/:orderId" element={ user ? <DeliveryTracking/> : <Navigate to="/login" /> } />
