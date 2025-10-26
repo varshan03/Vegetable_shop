@@ -719,4 +719,29 @@ th {
   font-size: 16px;
 }
 
-
+/* Admin Modal Grid Styling */
+.admin-modal-form {
+  margin-top: 8px;
+}
+.admin-modal-form .ant-form-item {
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  padding: 12px 12px 0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+.admin-modal-form .ant-input,
+.admin-modal-form .ant-select-selector,
+.admin-modal-form .ant-input-number,
+.admin-modal-form .ant-upload-select {
+  border-radius: 8px !important;
+}
+.admin-modal-form .ant-upload-wrapper,
+.admin-modal-form .ant-upload {
+  width: 100%;
+}
+@media (max-width: 768px) {
+  .admin-modal-form .ant-form-item {
+    padding: 8px 8px 0;
+  }
+}

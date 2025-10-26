@@ -1,17 +1,20 @@
 // frontend/src/pages/CustomerHome.js
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Button, Row, Col, Typography, message, Badge } from "antd";
+import { Card, Button, Row, Col, Typography, message, Badge, Input, Select, Space } from "antd";
 import { ShoppingCartOutlined, LogoutOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import config from "../server";
 import "../theme.css";
 // import "../styles/CustomerHome.css";
 
 const { Title } = Typography;
+const { Option } = Select;
 
 export default function CustomerHome() {
   const [products, setProducts] = useState([]);
   const [cartCount, setCartCount] = useState(0);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState();
   const nav = useNavigate();
 
   useEffect(() => {
@@ -19,9 +22,19 @@ export default function CustomerHome() {
     updateCartCount();
   }, []);
 
+  // Refetch when category changes to keep filter responsive
+  useEffect(() => {
+    fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category]);
+
   async function fetchProducts() {
     try {
-      const res = await fetch(`${config.baseURL}/api/products`);
+      const params = new URLSearchParams();
+      if (search) params.append("q", search);
+      if (category) params.append("category", category);
+      const qs = params.toString();
+      const res = await fetch(`${config.baseURL}/api/products${qs ? `?${qs}` : ""}`);
       const data = await res.json();
       setProducts(data);
     } catch (err) {
@@ -91,6 +104,32 @@ export default function CustomerHome() {
         </div>
       </header>
 
+      {/* ---------- Filters ---------- */}
+      <div style={{ margin: "12px 0" }}>
+        <Space>
+          <Input.Search
+            allowClear
+            placeholder="Search products (name, desc, uom)"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onSearch={fetchProducts}
+            style={{ width: 280 }}
+          />
+          <Select
+            allowClear
+            placeholder="Category"
+            value={category}
+            onChange={(v) => setCategory(v)}
+            style={{ width: 200 }}
+          >
+            <Option value="Vegetables">Vegetables</Option>
+            <Option value="Stationers items">Stationers items</Option>
+            <Option value="Banana Leaf">Banana Leaf</Option>
+          </Select>
+          <Button onClick={fetchProducts}>Refresh</Button>
+        </Space>
+      </div>
+
       {/* ---------- Product Grid ---------- */}
       <Row gutter={[16, 16]} className="product-grid">
         {products.map((p) => (
@@ -108,7 +147,7 @@ export default function CustomerHome() {
             >
               <Card.Meta
                 title={p.name}
-                description={`₹${p.price} | Stock: ${p.stock}`}
+                description={`₹${p.price} / ${p.uom || 'unit'} | Stock: ${p.stock} | ${p.category || ''}`}
               />
               <Button
                 type="primary"

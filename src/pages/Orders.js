@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Spin, Typography, message, List, Tag, Avatar, Button } from "antd";
+import { Card, Spin, Typography, message, List, Tag, Avatar, Button, Space } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import config from "../server";
 import "../theme.css";
@@ -100,13 +100,18 @@ export default function Orders() {
                       <strong>₹{order.total_price}</strong>
                     </div>
                     <div style={{ marginTop: '12px', textAlign: 'center' }}>
-                      <Button 
-                        type="primary" 
-                        onClick={() => nav(`/track/${order.order_id}`)}
-                        disabled={order.status === 'delivered' || order.status === 'cancelled'}
-                      >
-                        Track Order
-                      </Button>
+                      <Space>
+                        <Button onClick={() => nav(`/orders/${order.order_id}`)}>
+                          View Details
+                        </Button>
+                        <Button 
+                          type="primary" 
+                          onClick={() => nav(`/track/${order.order_id}`)}
+                          disabled={order.status === 'delivered' || order.status === 'cancelled'}
+                        >
+                          Track Order
+                        </Button>
+                      </Space>
                     </div>
                   </div>
                 </Card>

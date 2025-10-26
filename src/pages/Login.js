@@ -33,7 +33,7 @@ export default function Login() {
       // role-based navigation
       if (data.role === "admin") nav("/admin");
       else if (data.role === "delivery") nav("/delivery");
-      else nav("/");
+      else nav("/customer");
     } catch (err) {
       hide();
       message.error(err.message || "Something went wrong", 3);

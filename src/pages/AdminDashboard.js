@@ -41,8 +41,13 @@ export default function AdminDashboard() {
   const [form] = Form.useForm();
   const [imageFile, setImageFile] = useState(null);
   const [fileList, setFileList] = useState([]);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState('');
+  const [previewTitle, setPreviewTitle] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState();
   const nav = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
@@ -57,7 +62,11 @@ export default function AdminDashboard() {
 
   async function loadProducts() {
     try {
-      const res = await fetch(`${config.baseURL}/api/products`);
+      const params = new URLSearchParams();
+      if (search) params.append('q', search);
+      if (categoryFilter) params.append('category', categoryFilter);
+      const qs = params.toString();
+      const res = await fetch(`${config.baseURL}/api/products${qs ? `?${qs}` : ''}`);
       const data = await res.json();
       setProducts(data);
     } catch (err) {
@@ -109,7 +118,7 @@ const productColumns = [
         height={60}
         src={
           image_url
-            ? `http://localhost:4000${image_url}` // 🔹 Adjust this base URL to match your backend
+            ? `${config.baseURL}${image_url}` // 🔹 Adjust this base URL to match your backend
             : "https://via.placeholder.com/60"
         }
         alt="Product"
@@ -127,6 +136,11 @@ const productColumns = [
     key: "name",
   },
   {
+    title: "Category",
+    dataIndex: "category",
+    key: "category",
+  },
+  {
     title: "Price",
     dataIndex: "price",
     key: "price",
@@ -137,6 +151,11 @@ const productColumns = [
       const priceNum = Number(price);
       return `₹${!isNaN(priceNum) ? priceNum.toFixed(2) : "0.00"}`;
     },
+  },
+  {
+    title: "UOM",
+    dataIndex: "uom",
+    key: "uom",
   },
   {
     title: "Stock",
@@ -173,8 +192,24 @@ const productColumns = [
       name: product.name,
       price: product.price,
       stock: product.stock,
-      description: product.description,
+      description: product.description || '',
+      category: product.category || 'Vegetables',
+      uom: product.uom || 'kg',
     });
+    
+    // Set the file list for image preview if product has an image
+    if (product.image_url) {
+      setFileList([{
+        uid: '-1',
+        name: 'current-image',
+        status: 'done',
+        url: `${config.baseURL}${product.image_url}`,
+      }]);
+    } else {
+      setFileList([]);
+    }
+    
+    setImageFile(null); // Reset any previously selected new image
     setModalVisible(true);
   };
 
@@ -217,7 +252,7 @@ const productColumns = [
 
       <div className="dashboard-stats" style={{marginTop:'10px'}}>
         <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} sm={12} md={8} >
             <Card 
               className="stat-card"
               onClick={() => nav('/admin/orders')}
@@ -230,7 +265,7 @@ const productColumns = [
               </div>
             </Card>
           </Col>
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} sm={12} md={8} >
             <Card className="stat-card">
               <ShoppingOutlined className="stat-icon" style={{ color: '#52c41a' }} />
               <div className="stat-content">
@@ -239,7 +274,7 @@ const productColumns = [
               </div>
             </Card>
           </Col>
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} sm={12} md={8} >
             <Card className="stat-card">
               <TeamOutlined className="stat-icon" style={{ color: '#722ed1' }} />
               <div className="stat-content">
@@ -263,6 +298,7 @@ const productColumns = [
                 form.resetFields();
                 setFileList([]);
                 setImageFile(null);
+                form.setFieldsValue({ category: 'Vegetables', uom: 'kg' });
                 setModalVisible(true);
               }}
             >
@@ -272,6 +308,30 @@ const productColumns = [
         }
         className="admin-card"
       >
+        <div style={{ marginBottom: 12 }}>
+          <Space>
+            <Input.Search
+              allowClear
+              placeholder="Search name, description, category, uom"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onSearch={() => loadProducts()}
+              style={{ width: 280 }}
+            />
+            <Select
+              allowClear
+              placeholder="Filter by category"
+              value={categoryFilter}
+              onChange={(v) => { setCategoryFilter(v); setTimeout(loadProducts, 0); }}
+              style={{ width: 200 }}
+            >
+              <Option value="Vegetables">Vegetables</Option>
+              <Option value="Stationers items">Stationers items</Option>
+              <Option value="Banana Leaf">Banana Leaf</Option>
+            </Select>
+            <Button onClick={() => loadProducts()}>Refresh</Button>
+          </Space>
+        </div>
         <Table 
           dataSource={products} 
           columns={productColumns} 
@@ -281,12 +341,13 @@ const productColumns = [
       </Card>
 
       <Modal
-        title={editingProduct ? "Edit Product" : "Add Product"}
+        title={editingProduct ? 'Edit Product' : 'Add New Product'}
         open={modalVisible}
+        width="80%"
         onCancel={() => {
           setModalVisible(false);
-          form.resetFields();
           setEditingProduct(null);
+          form.resetFields();
           setFileList([]);
           setImageFile(null);
         }}
@@ -302,10 +363,14 @@ const productColumns = [
                 formData.append(key, value);
               });
               
-              if (imageFile) {
-                formData.append('image', imageFile);
+              const selectedFile = (fileList && fileList[0] && fileList[0].originFileObj)
+                ? fileList[0].originFileObj
+                : imageFile;
+              if (selectedFile) {
+                formData.append('image', selectedFile, selectedFile.name || 'upload.jpg');
               }
-
+              console.log(formData);
+              console.log(imageFile)
               const url = editingProduct 
                 ? `${config.baseURL}/api/products/${editingProduct.id}`
                 : `${config.baseURL}/api/products`;
@@ -315,6 +380,7 @@ const productColumns = [
               const res = await fetch(url, {
                 method,
                 body: formData,
+                // Don't set Content-Type header - let the browser set it with the correct boundary
               });
 
               if (!res.ok) {
@@ -324,6 +390,8 @@ const productColumns = [
               message.success(`Product ${editingProduct ? 'updated' : 'added'} successfully`);
               setModalVisible(false);
               form.resetFields();
+              setFileList([]);
+              setImageFile(null);
               loadProducts();
             } catch (err) {
               console.error('Error saving product:', err);
@@ -331,60 +399,126 @@ const productColumns = [
             }
           }}
         >
-          <Form.Item
-            name="name"
-            label="Product Name"
-            rules={[{ required: true, message: 'Please enter product name' }]}
-          >
-            <Input placeholder="Enter product name" />
-          </Form.Item>
+          <Row gutter={[16, 16]} className="admin-modal-form">
+            <Col xs={24} sm={12} md={8} >
+              <Form.Item
+                name="category"
+                label="Category"
+                rules={[{ required: true, message: 'Please select category' }]}
+              >
+                <Select placeholder="Select category" style={{marginBottom:'10px'}}>
+                  <Option value="Vegetables">Vegetables</Option>
+                  <Option value="Stationers items">Stationers items</Option>
+                  <Option value="Banana Leaf">Banana Leaf</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8} >
+              <Form.Item
+                name="name"
+                label="Product Name"
+                rules={[{ required: true, message: 'Please enter product name' }]}
+              >
+                <Input placeholder="Enter product name" style={{marginBottom:'10px'}}/>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8} >
+              <Form.Item
+                name="price"
+                label="Price"
+                rules={[{ required: true, message: 'Please enter price' }]}
+              >
+                <Input type="number" step="0.01" placeholder="Enter price" style={{marginBottom:'10px'}}/>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8} >
+              <Form.Item
+                name="uom"
+                label="Unit of Measure (UOM)"
+                rules={[{ required: true, message: 'Please select UOM' }]}
+              >
+                <Select placeholder="Select UOM" style={{marginBottom:'10px'}}>
+                  <Option value="kg">kg</Option>
+                  <Option value="g">g</Option>
+                  <Option value="pcs">pcs</Option>
+                  <Option value="bundle">bundle</Option>
+                  <Option value="dozen">dozen</Option>
+                  <Option value="leaf">leaf</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8} >
+              <Form.Item
+                name="stock"
+                label="Stock"
+                rules={[{ required: true, message: 'Please enter stock' }]}
+              >
+                <Input type="number" placeholder="Enter stock quantity" style={{marginBottom:'10px'}}/>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8} >
+              <Form.Item label="Product Image">
+                <Upload
+                  listType="picture-card"
+                  style={{marginBottom:'10px'}}
+                  accept="image/*"
+                  maxCount={1}
+                  fileList={fileList}
+                  beforeUpload={(file) => {
+                    // prevent auto upload, we handle it in form submit
+                    return false;
+                  }}
+                  onChange={({ file, fileList: newFileList }) => {
+                    const fl = newFileList.slice(-1).map((f) => {
+                      if (f.originFileObj && !f.thumbUrl) {
+                        try { f.thumbUrl = URL.createObjectURL(f.originFileObj); } catch (_) {}
+                      }
+                      return f;
+                    });
+                    setFileList(fl);
+                    if (file && file.originFileObj) setImageFile(file.originFileObj);
+                  }}
+                  onPreview={(file) => {
+                    const src = file.url || file.thumbUrl;
+                    if (src) {
+                      setPreviewImage(src);
+                      setPreviewTitle(file.name || 'Image Preview');
+                      setPreviewOpen(true);
+                    }
+                  }}
+                  onRemove={() => {
+                    setImageFile(null);
+                    setFileList([]);
+                  }}
+                >
+                  <Button style={{ width: '80%' }} icon={<UploadOutlined />}>Upload</Button>
+                </Upload>
+              </Form.Item>
+            </Col>
+            <Col span={24}>
+              <Form.Item
+                name="description"
+                label="Description"
+              >
+                <Input.TextArea rows={4} placeholder="Enter product description" style={{marginBottom:'10px'}} />
+              </Form.Item>
+            </Col>
           
-          <Form.Item
-            name="price"
-            label="Price"
-            rules={[{ required: true, message: 'Please enter price' }]}
-          >
-            <Input type="number" step="0.01" placeholder="Enter price" />
-          </Form.Item>
-          
-          <Form.Item
-            name="stock"
-            label="Stock"
-            rules={[{ required: true, message: 'Please enter stock' }]}
-          >
-            <Input type="number" placeholder="Enter stock quantity" />
-          </Form.Item>
-          
-          <Form.Item
-            name="description"
-            label="Description"
-          >
-            <Input.TextArea rows={4} placeholder="Enter product description" />
-          </Form.Item>
-          
-          <Form.Item label="Product Image">
-            <Upload
-              fileList={fileList}
-              beforeUpload={(file) => {
-                setImageFile(file);
-                return false;
-              }}
-              onRemove={() => {
-                setImageFile(null);
-                setFileList([]);
-                return false;
-              }}
-            >
-              <Button icon={<UploadOutlined />}>Select Image</Button>
-            </Upload>
-          </Form.Item>
-          
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              {editingProduct ? 'Update Product' : 'Add Product'}
-            </Button>
-          </Form.Item>
+                <Button type="primary" htmlType="submit">
+                  {editingProduct ? 'Update Product' : 'Add Product'}
+                </Button>
+            
+        
+          </Row>
         </Form>
+      </Modal>
+      <Modal
+        open={previewOpen}
+        title={previewTitle}
+        footer={null}
+        onCancel={() => setPreviewOpen(false)}
+      >
+        <img alt="preview" style={{ width: '100%' }} src={previewImage} />
       </Modal>
     </div>
   );
