@@ -10,6 +10,7 @@ import AdminOrders from './pages/AdminOrders';
 import DeliveryApp from './pages/DeliveryApp';
 import Orders from './pages/Orders';
 import DeliveryTracking from './pages/DeliveryTracking';
+import AccountSettings from './pages/AccountSettings';
 import OrderDetails from './pages/OrderDetails';
 import './App.css';
 
@@ -22,6 +23,7 @@ function App(){
         <Route path="/login" element={<Login/>} />
         <Route path="/signup" element={<Signup/>} />
         <Route path="/customer" element={<CustomerHome/>} />
+        <Route path="/acconts" element={<AccountSettings/>} />
         <Route path="/" element={ <Navigate to="/login" /> } />
         <Route path="/cart" element={ user ? <Cart/> : <Navigate to="/login" /> } />
         <Route path="/checkout" element={ user ? <Checkout/> : <Navigate to="/login" /> } />
