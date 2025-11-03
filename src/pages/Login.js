@@ -5,6 +5,7 @@ import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import config from "../server";
 import "../App.css";
 import "../theme.css";
+import logo from "../Images/logo.jpg";
 
 const { Title } = Typography;
 
@@ -54,8 +55,20 @@ export default function Login() {
     <div className="login-wrapper">
       <div className="login-card-container">
         <Card className="login-card" bordered={false}>
+          {/* Logo and Shop Name */}
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <img 
+              src={logo} 
+              alt="RR Fresh Delivery Logo" 
+              style={{ width: 80, height: 80, marginBottom: 12 }}
+            />
+            <Title level={2} style={{ margin: 0, color: "#52c41a" }}>
+              RR Fresh Delivery
+            </Title>
+          </div>
+
           <Title level={3} className="login-title">
-            🥦 Vegetable Shop — Login
+            Login to Your Account
           </Title>
 
           <Form
@@ -104,7 +117,7 @@ export default function Login() {
           </Form>
 
           <div style={{ textAlign: "center", marginTop: 16 }}>
-            Don’t have an account? <Link to="/signup">Sign up</Link>
+            Don't have an account? <Link to="/signup">Sign up</Link>
           </div>
         </Card>
       </div>

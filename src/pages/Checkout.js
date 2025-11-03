@@ -96,7 +96,7 @@ export default function Checkout(){
   }
 
   const total = cart.reduce((s,i)=> s + i.quantity * i.price, 0);
-  const deliveryFee = total > 500 ? 0 : 40;
+  const deliveryFee = total > 400 ? 0 : 40;
   const finalTotal = total + deliveryFee;
 
   if (cart.length === 0) {
@@ -239,9 +239,9 @@ export default function Checkout(){
                 {deliveryFee === 0 ? 'FREE' : `₹${deliveryFee.toFixed(2)}`}
               </Text>
             </div>
-            {total < 500 && (
+            {total < 400 && (
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                Add ₹{(500 - total).toFixed(2)} more for free delivery
+                Add ₹{(400 - total).toFixed(2)} more for free delivery
               </Text>
             )}
             <Divider />
@@ -255,7 +255,7 @@ export default function Checkout(){
             <Title level={5}>🚚 Delivery Information</Title>
             <Text type="secondary">
               • Estimated delivery: 30-45 minutes<br/>
-              • Free delivery on orders above ₹500<br/>
+              • Free delivery on orders above ₹400<br/>
               • Fresh vegetables guaranteed<br/>
               • Cash on delivery available
             </Text>

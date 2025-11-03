@@ -26,7 +26,8 @@ import {
   LogoutOutlined, 
   ShoppingOutlined, 
   TeamOutlined,
-  ShoppingCartOutlined
+  ShoppingCartOutlined,
+  UserOutlined
 } from "@ant-design/icons";
 import config from "../server";
 import "../App.css";
@@ -101,7 +102,7 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleLogout = () => {
+const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     nav("/login");
@@ -234,8 +235,17 @@ const productColumns = [
           <Space>
             <Button 
               type="primary" 
+              icon={<UserOutlined />}
+              onClick={() => nav('/admin/users')}
+              style={{ marginRight: 8 }}
+            >
+              Manage Users
+            </Button>
+            <Button 
+              type="primary" 
               icon={<ShoppingCartOutlined />}
               onClick={() => nav('/admin/orders')}
+              style={{ marginRight: 8 }}
             >
               View Orders
             </Button>
@@ -275,7 +285,11 @@ const productColumns = [
             </Card>
           </Col>
           <Col xs={24} sm={12} md={8} >
-            <Card className="stat-card">
+            <Card 
+              className="stat-card"
+              onClick={() => nav('/admin/users')}
+              hoverable
+            >
               <TeamOutlined className="stat-icon" style={{ color: '#722ed1' }} />
               <div className="stat-content">
                 <Title level={3} className="stat-value">{stats.totalUsers}</Title>
@@ -339,7 +353,6 @@ const productColumns = [
           pagination={{ pageSize: 10 }}
         />
       </Card>
-
       <Modal
         title={editingProduct ? 'Edit Product' : 'Add New Product'}
         open={modalVisible}

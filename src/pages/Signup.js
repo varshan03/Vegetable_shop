@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Form, Input, Button, Card, Typography, Alert } from "antd";
-import { UserOutlined, LockOutlined, MailOutlined } from "@ant-design/icons";
+import { UserOutlined, LockOutlined, MailOutlined, PhoneOutlined } from "@ant-design/icons";
 import config from "../server";
 import "../App.css";
 import "../theme.css";
@@ -56,7 +56,7 @@ export default function Signup() {
             name="signup"
             layout="vertical"
             onFinish={handleSignup}
-            initialValues={{ name: "", email: "", password: "" }}
+            initialValues={{ name: "", email: "", password: "", phone_number: "" }}
           >
             <Form.Item
               label="Name"
@@ -91,6 +91,24 @@ export default function Signup() {
                 prefix={<LockOutlined />}
                 placeholder="Enter password"
                 size="large"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label="Phone Number"
+              name="phone_number"
+              rules={[
+                { required: true, message: 'Please enter your phone number!' },
+                { pattern: /^[0-9]{10}$/, message: 'Please enter a valid 10-digit phone number' }
+              ]}
+            >
+              <Input
+                addonBefore="+91"
+                prefix={<PhoneOutlined />}
+                placeholder="Enter 10-digit mobile number"
+                maxLength={10}
+                size="large"
+                style={{ width: '100%' }}
               />
             </Form.Item>
 
