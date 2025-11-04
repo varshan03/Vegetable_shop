@@ -1,10 +1,11 @@
 // frontend/src/pages/CustomerHome.js
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Button, Row, Col, Typography, message, Badge, Input, Tag, Divider } from "antd";
-import { ShoppingCartOutlined, LogoutOutlined, UnorderedListOutlined, SearchOutlined, UserOutlined, HeartOutlined, StarFilled } from "@ant-design/icons";
+import { Card, Button, Row, Col, Typography, message, Badge, Input, Tag, Divider, Drawer } from "antd";
+import { ShoppingCartOutlined, LogoutOutlined, UnorderedListOutlined, SearchOutlined, UserOutlined, HeartOutlined, StarFilled, MenuOutlined } from "@ant-design/icons";
 import config from "../server";
 import "../theme.css";
+import logoImg from "../Images/logo.jpg";
 // import "../styles/CustomerHome.css";
 
 const { Title, Text } = Typography;
@@ -14,6 +15,7 @@ export default function CustomerHome() {
   const [cartCount, setCartCount] = useState(0);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const nav = useNavigate();
 
   useEffect(() => {
@@ -80,33 +82,31 @@ export default function CustomerHome() {
       <header className="ecommerce-header">
         <div className="header-top">
           <div className="logo-section">
-            <Title level={2} className="brand-logo">VeggieShop</Title>
+            <img src={logoImg} alt="RR Fresh Delivery" className="company-logo" />
             <Text style={{marginTop:'3px'}} className="brand-tagline">Fresh & Organic</Text>
           </div>
           
           <div className="search-section">
-            <Input.Search
+            <Input
               size="large"
-              placeholder="Search for products, categories and more..."
+              placeholder="Search products..."
               prefix={<SearchOutlined />}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              onSearch={fetchProducts}
               allowClear
-              enterButton
-         
               className="main-search-bar"
             />
           </div>
 
-          <div className="header-actions">
+          {/* Desktop Navigation */}
+          <div className="header-actions desktop-nav">
             <Button 
               type="text" 
               icon={<UserOutlined />}
               className="header-btn"
               onClick={()=> nav("/acconts")}
             >
-              Account
+              <span className="btn-text">Account</span>
             </Button>
             <Button 
               type="text" 
@@ -114,7 +114,7 @@ export default function CustomerHome() {
               onClick={() => nav("/orders")}
               className="header-btn"
             >
-              Orders
+              <span className="btn-text">Orders</span>
             </Button>
             <Badge count={cartCount} showZero>
               <Button 
@@ -123,7 +123,7 @@ export default function CustomerHome() {
                 onClick={() => nav("/cart")}
                 className="header-btn cart-btn"
               >
-                Cart
+                <span className="btn-text">Cart</span>
               </Button>
             </Badge>
             <Button
@@ -136,11 +136,93 @@ export default function CustomerHome() {
               }}
               className="header-btn"
             >
-              Logout
+              <span className="btn-text">Logout</span>
             </Button>
+          </div>
+
+          {/* Mobile Navigation */}
+          <div className="header-actions mobile-nav">
+            <Badge count={cartCount} showZero>
+              <Button 
+                type="text" 
+                icon={<ShoppingCartOutlined />}
+                onClick={() => nav("/cart")}
+                className="header-btn-mobile"
+                size="large"
+              />
+            </Badge>
+            <Button 
+              type="text" 
+              icon={<MenuOutlined />}
+              onClick={() => setMobileMenuOpen(true)}
+              className="header-btn-mobile"
+              size="large"
+            />
           </div>
         </div>
       </header>
+
+      {/* Mobile Menu Drawer */}
+      <Drawer
+        title="Menu"
+        placement="right"
+        onClose={() => setMobileMenuOpen(false)}
+        open={mobileMenuOpen}
+        className="mobile-menu-drawer"
+      >
+        <div className="mobile-menu-items">
+          <Button 
+            type="text" 
+            icon={<UserOutlined />}
+            className="mobile-menu-btn"
+            onClick={()=> {
+              nav("/acconts");
+              setMobileMenuOpen(false);
+            }}
+            block
+          >
+            Account
+          </Button>
+          <Button 
+            type="text" 
+            icon={<UnorderedListOutlined />}
+            onClick={() => {
+              nav("/orders");
+              setMobileMenuOpen(false);
+            }}
+            className="mobile-menu-btn"
+            block
+          >
+            Orders
+          </Button>
+          <Button 
+            type="text" 
+            icon={<ShoppingCartOutlined />}
+            onClick={() => {
+              nav("/cart");
+              setMobileMenuOpen(false);
+            }}
+            className="mobile-menu-btn"
+            block
+          >
+            Cart ({cartCount})
+          </Button>
+          <Divider />
+          <Button
+            type="text"
+            danger
+            icon={<LogoutOutlined />}
+            onClick={() => {
+              localStorage.removeItem("user");
+              nav("/login");
+            }}
+            className="mobile-menu-btn"
+            block
+          >
+            Logout
+          </Button>
+        </div>
+      </Drawer>
 
       {/* ---------- Category Navigation ---------- */}
       <div className="category-nav">
@@ -224,11 +306,11 @@ export default function CustomerHome() {
                     
                     <div className="product-rating">
                       <Tag color="green" icon={<StarFilled />} className="rating-tag">
-                        4.{Math.floor(Math.random() * 5 + 3)}
+                        4.5
                       </Tag>
-                      <Text type="secondary" className="rating-count">
+                      {/* <Text type="secondary" className="rating-count">
                         ({Math.floor(Math.random() * 500 + 100)})
-                      </Text>
+                      </Text> */}
                     </div>
 
                     <div className="product-pricing">
@@ -261,7 +343,7 @@ export default function CustomerHome() {
 
       {/* ---------- Footer ---------- */}
       <footer className="ecommerce-footer">
-        <Text type="secondary">© 2024 VeggieShop - Fresh Vegetables & More</Text>
+        <Text type="secondary">© 2024 RR Fresh Delivery - Fresh Vegetables & More</Text>
       </footer>
     </div>
   );
