@@ -31,7 +31,7 @@ export default function Cart() {
   }
 
   function updateTotal(items) {
-    const t = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    const t = items.reduce((sum, i) => sum + Number(i.price) * i.quantity, 0);
     setTotal(t);
   }
 
@@ -104,7 +104,7 @@ export default function Cart() {
                   <img src={`${config.baseURL}${item.image_url}`} alt={item.name} className="cart-item-image" />
                   <div className="cart-item-details">
                     <Title level={5}>{item.name}</Title>
-                    <Text>Price: ₹{item.price}</Text>
+                    <Text>Price: ₹{Number(item.price).toFixed(2)}</Text>
                     <div className="cart-item-actions">
                       <InputNumber
                         min={1}
@@ -119,7 +119,7 @@ export default function Cart() {
                     </div>
                   </div>
                   <div className="cart-item-subtotal">
-                    <Text>Subtotal: ₹{item.price * item.quantity}</Text>
+                    <Text>Subtotal: ₹{(Number(item.price) * item.quantity).toFixed(2)}</Text>
                   </div>
                 </div>
               </Card>
@@ -140,13 +140,13 @@ export default function Cart() {
                 <Title level={5}>Total</Title>
                 <Title level={5}>₹{total}</Title>
               </div>
-              <TextArea 
+              {/* <TextArea 
                 rows={4} 
                 placeholder="Enter your delivery address" 
                 value={address} 
                 onChange={(e) => setAddress(e.target.value)} 
                 style={{ marginBottom: '16px' }}
-              />
+              /> */}
               <Button type="primary" size="large" block onClick={() => nav('/checkout')}>
                 Proceed to Checkout
               </Button>

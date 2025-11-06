@@ -49,7 +49,7 @@ export default function Orders() {
         <Button 
           type="text" 
           icon={<ArrowLeftOutlined />} 
-          onClick={() => nav('/')}
+          onClick={() => nav(-1)}
           style={{ marginRight: '16px' }}
         >
           Back to Home

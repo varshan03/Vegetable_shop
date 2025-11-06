@@ -67,7 +67,7 @@ export default function CustomerHome() {
       cart.push({
         product_id: product.id,
         name: product.name,
-        price: product.price,
+        price: Number(product.price),
         image_url: product.image_url,
         quantity: 1,
       });

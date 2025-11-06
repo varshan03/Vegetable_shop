@@ -73,17 +73,8 @@ export default function AdminOrders() {
     },
     {
       title: 'Total',
-      dataIndex: 'total',
-      key: 'total',
-      render: (total) => {
-        // Handle undefined, null, or empty values
-        if (total === undefined || total === null) {
-          return '₹0.00';
-        }
-        // Convert to number and format
-        const totalNum = Number(total);
-        return `₹${!isNaN(totalNum) ? totalNum.toFixed(2) : '0.00'}`;
-      },
+      dataIndex: 'total_price',
+      key: 'total_price',
     },
     {
       title: 'Order Date',

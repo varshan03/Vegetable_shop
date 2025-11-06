@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import CustomerHome from './pages/CustomerHome';
@@ -14,6 +14,7 @@ import DeliveryTracking from './pages/DeliveryTracking';
 import AccountSettings from './pages/AccountSettings';
 import OrderDetails from './pages/OrderDetails';
 import './App.css';
+import HeaderBar from './Components/HeaderBar';
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -25,7 +26,12 @@ function App() {
   useEffect(() => {
     const handleStorageChange = () => {
       const saved = localStorage.getItem('user');
-      setUser(saved ? JSON.parse(saved) : null);
+      let next = null;
+      try { next = saved ? JSON.parse(saved) : null; } catch { next = null; }
+      setUser((prev) => {
+        const same = JSON.stringify(prev) === JSON.stringify(next);
+        return same ? prev : next;
+      });
     };
 
     // Initial check
@@ -34,12 +40,8 @@ function App() {
     // Listen for changes (e.g., login in another tab)
     window.addEventListener('storage', handleStorageChange);
 
-    // Optional: Poll every 1s if same-tab updates aren't triggering
-    const interval = setInterval(handleStorageChange, 1000);
-
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
     };
   }, []);
 
@@ -47,49 +49,62 @@ function App() {
   useEffect(() => {
     const handleUserChange = () => {
       const saved = localStorage.getItem('user');
-      setUser(saved ? JSON.parse(saved) : null);
+      let next = null;
+      try { next = saved ? JSON.parse(saved) : null; } catch { next = null; }
+      setUser((prev) => {
+        const same = JSON.stringify(prev) === JSON.stringify(next);
+        return same ? prev : next;
+      });
     };
 
     window.addEventListener('userChanged', handleUserChange);
     return () => window.removeEventListener('userChanged', handleUserChange);
   }, []);
 
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/" element={<Navigate to="/login" replace />} />
+  function AppContent() {
+    const location = useLocation();
+    const hideGlobalHeader = location.pathname === '/customer' || location.pathname === '/login';
+    return (
+      <>
+        {!hideGlobalHeader && <HeaderBar />}
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* Protected Routes */}
-        <Route
-          path="/customer"
-          element={user ? <CustomerHome /> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/cart"
-          element={user ? <Cart /> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/checkout"
-          element={user ? <Checkout /> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/orders"
-          element={user ? <Orders /> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/acconts"
-          element={user ? <AccountSettings /> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/track/:orderId"
-          element={user ? <DeliveryTracking /> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/admin/orders/:orderId"
-          element={user ? <OrderDetails /> : <Navigate to="/login" replace />}
-        />
+          {/* Protected Routes */}
+          <Route
+            path="/customer"
+            element={user ? <CustomerHome /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/cart"
+            element={user ? <Cart /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/checkout"
+            element={user ? <Checkout /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/orders"
+            element={user ? <Orders /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/orders/:orderId"
+            element={user ? <OrderDetails /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/acconts"
+            element={user ? <AccountSettings /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/track/:orderId"
+            element={user ? <DeliveryTracking /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/admin/orders/:orderId"
+            element={user ? <OrderDetails /> : <Navigate to="/login" replace />}
+          />
 
         {/* Admin Routes */}
         <Route
@@ -125,7 +140,14 @@ function App() {
 
         {/* Delivery App - Allow without login? Or protect? */}
         <Route path="/delivery" element={<DeliveryApp />} />
-      </Routes>
+        </Routes>
+      </>
+    );
+  }
+
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 }

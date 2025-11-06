@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Button, Typography, List, Divider, Row, Col, Form, Input, Radio, message, Steps } from 'antd';
-import { ShoppingCartOutlined, CreditCardOutlined, HomeOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { Card, Button, Typography, List, Divider, Row, Col, Form, Input, Radio, message, Steps, Progress, Space, Tag } from 'antd';
+import { ShoppingCartOutlined, CreditCardOutlined, HomeOutlined, CheckCircleOutlined, EnvironmentOutlined, SafetyOutlined, ClockCircleOutlined, GiftOutlined } from '@ant-design/icons';
 import config from '../server';
 import '../theme.css';
 
@@ -95,7 +95,7 @@ export default function Checkout(){
     }
   }
 
-  const total = cart.reduce((s,i)=> s + i.quantity * i.price, 0);
+  const total = cart.reduce((s,i)=> s + i.quantity * Number(i.price), 0);
   const deliveryFee = total > 400 ? 0 : 40;
   const finalTotal = total + deliveryFee;
 
@@ -108,7 +108,7 @@ export default function Checkout(){
             <Title level={3}>Your cart is empty</Title>
             <Text type="secondary">Add some vegetables to your cart to proceed with checkout</Text>
             <br />
-            <Button type="primary" size="large" onClick={() => nav('/')} style={{ marginTop: '16px' }}>
+            <Button type="primary" size="large" onClick={() => nav('/customer')} style={{ marginTop: '16px' }}>
               Continue Shopping
             </Button>
           </div>
@@ -120,7 +120,7 @@ export default function Checkout(){
   const steps = [
     {
       title: 'Order Review',
-      icon: <ShoppingCartOutlined />,
+      icon: <ShoppingCartOutlined  />,
     },
     {
       title: 'Delivery Details',
@@ -138,38 +138,90 @@ export default function Checkout(){
 
   return (
     <div className="checkout-container">
-      <Card className="checkout-header-card">
-        <Title level={2} style={{ textAlign: 'center', marginBottom: '24px' }}>
-          🛒 Checkout
-        </Title>
-        <Steps current={currentStep} items={steps} />
+      {/* Professional Header with Progress */}
+      <Card className="checkout-header-card-pro">
+        <div className="checkout-header-content">
+          <div className="checkout-header-main">
+            <div className="checkout-icon-wrapper">
+              <ShoppingCartOutlined className="checkout-main-icon" />
+            </div>
+            <div className="checkout-header-text">
+              <Title level={2} className="checkout-title-pro">Secure Checkout</Title>
+              <Text type="secondary" className="checkout-subtitle-pro">
+                Complete your order in 3 simple steps • Safe & Secure Payment
+              </Text>
+            </div>
+          </div>
+          <div className="checkout-progress-wrapper">
+            <Progress 
+              percent={((currentStep + 1) / steps.length) * 100} 
+              strokeColor={{
+                '0%': '#4caf50',
+                '100%': '#2e7d32',
+              }}
+              showInfo={false}
+              strokeWidth={8}
+            />
+            <div className="checkout-steps-minimal">
+              <Steps 
+                current={currentStep} 
+                items={steps} 
+                size="small"
+                labelPlacement="vertical"
+              />
+            </div>
+          </div>
+        </div>
       </Card>
 
       <Row gutter={[24, 24]}>
         <Col xs={24} lg={16}>
-          <Card title="Order Summary" className="checkout-card">
+          {/* Enhanced Order Summary */}
+          <Card 
+            className="checkout-card-pro"
+            title={
+              <Space>
+                <ShoppingCartOutlined style={{ fontSize: '18px', color: '#4caf50' }} />
+                <span>Order Summary ({cart.length} items)</span>
+              </Space>
+            }
+          >
             <List
               dataSource={cart}
               renderItem={(item) => (
-                <List.Item>
-                  <List.Item.Meta
-                    avatar={
-                      <img 
-                        src={`${config.baseURL}${item.image_url}`} 
-                        alt={item.name}
-                        style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }}
-                      />
-                    }
-                    title={item.name}
-                    description={`Quantity: ${item.quantity}`}
-                  />
-                  <Text strong>₹{(item.price * item.quantity).toFixed(2)}</Text>
+                <List.Item className="checkout-order-item">
+                  <div className="checkout-item-image">
+                    <img 
+                      src={`${config.baseURL}${item.image_url}`} 
+                      alt={item.name}
+                    />
+                  </div>
+                  <div className="checkout-item-details">
+                    <Text strong className="checkout-item-name">{item.name}</Text>
+                    <Text type="secondary" className="checkout-item-quantity">
+                      Qty: {item.quantity} × ₹{Number(item.price).toFixed(2)}
+                    </Text>
+                  </div>
+                  <div className="checkout-item-price">
+                    <Text strong style={{ fontSize: '16px', color: '#2e7d32' }}>
+                      ₹{(Number(item.price) * item.quantity).toFixed(2)}
+                    </Text>
+                  </div>
                 </List.Item>
               )}
             />
           </Card>
 
-          <Card title="Delivery & Payment Details" className="checkout-card">
+          {/* Delivery Details Card */}
+          <Card 
+            className="checkout-card-pro"
+            title={
+              <Space>
+                <EnvironmentOutlined style={{ fontSize: '18px', color: '#4caf50' }} />
+                <span>Delivery Details</span>
+              </Space>
+            }
+          >
             <Form
               form={form}
               layout="vertical"
@@ -178,49 +230,82 @@ export default function Checkout(){
                 paymentMethod: 'cod'
               }}
             >
-              {location.error && (
-                <div style={{ color: '#ff4d4f', marginBottom: '16px' }}>
-                  {location.error}
-                </div>
-              )}
               {location.latitude && location.longitude && (
-                <div style={{ color: '#52c41a', marginBottom: '16px' }}>
-                  Location detected: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                <div className="location-success-banner">
+                  <EnvironmentOutlined /> Location detected successfully
+                  <Tag color="success" style={{ marginLeft: '8px' }}>Accurate</Tag>
                 </div>
               )}
+              {location.error && (
+                <div className="location-error-banner">
+                  <EnvironmentOutlined /> {location.error}
+                </div>
+              )}
+              
               <Form.Item
-                label="Delivery Address"
+                label={
+                  <Space>
+                    <HomeOutlined />
+                    <span>Complete Delivery Address</span>
+                  </Space>
+                }
                 name="address"
                 rules={[{ required: true, message: 'Please enter your delivery address!' }]}
-                extra="Please ensure your address is accurate for smooth delivery"
               >
                 <Input.TextArea
-                  rows={3}
-                  placeholder="Enter your complete delivery address"
+                  rows={4}
+                  placeholder="House/Flat No., Building Name, Street, Landmark, Area, City, Pincode"
+                  className="checkout-textarea"
                 />
               </Form.Item>
 
-              <Form.Item
-                label="Payment Method"
-                name="paymentMethod"
-                rules={[{ required: true, message: 'Please select a payment method!' }]}
-              >
-                <Radio.Group>
-                  <Radio value="cod">Cash on Delivery</Radio>
-                  <Radio value="online">Online Payment</Radio>
-                </Radio.Group>
-              </Form.Item>
+              {/* Payment Method Card */}
+              <Divider />
+              <div style={{ marginTop: '24px' }}>
+                <Title level={5} style={{ marginBottom: '16px' }}>
+                  <Space>
+                    <CreditCardOutlined style={{ color: '#4caf50' }} />
+                    <span>Payment Method</span>
+                  </Space>
+                </Title>
+                <Form.Item
+                  name="paymentMethod"
+                  rules={[{ required: true, message: 'Please select a payment method!' }]}
+                >
+                  <Radio.Group className="payment-radio-group">
+                    <Radio value="cod" className="payment-radio-option">
+                      <div className="payment-option-content">
+                        <SafetyOutlined style={{ fontSize: '20px',  }} />
+                        <div>
+                          <div className="payment-option-title">Cash on Delivery</div>
+                          <div className="payment-option-desc">Pay when you receive</div>
+                        </div>
+                      </div>
+                    </Radio>
+                    <Radio value="online" className="payment-radio-option">
+                      <div className="payment-option-content">
+                        <CreditCardOutlined style={{ fontSize: '20px',  }} />
+                        <div>
+                          <div className="payment-option-title">Online Payment</div>
+                          <div className="payment-option-desc">UPI, Cards, Wallets</div>
+                        </div>
+                      </div>
+                    </Radio>
+                  </Radio.Group>
+                </Form.Item>
+              </div>
 
-              <Form.Item>
+              <Form.Item style={{ marginTop: '24px', marginBottom: 0 }}>
                 <Button
                   type="primary"
                   htmlType="submit"
                   size="large"
                   loading={loading}
                   block
-                  style={{ height: '48px', fontSize: '16px', fontWeight: '600' }}
+                  className="checkout-place-order-btn"
+                  icon={<CheckCircleOutlined />}
                 >
-                  Place Order - ₹{finalTotal.toFixed(2)}
+                  Place Order • ₹{finalTotal.toFixed(2)}
                 </Button>
               </Form.Item>
             </Form>
@@ -228,37 +313,65 @@ export default function Checkout(){
         </Col>
 
         <Col xs={24} lg={8}>
-          <Card title="Order Total" className="checkout-summary-card">
-            <div className="summary-row">
-              <Text>Subtotal ({cart.length} items)</Text>
-              <Text strong>₹{total.toFixed(2)}</Text>
+          {/* Enhanced Order Total */}
+          <Card className="checkout-summary-card-pro">
+            <Title level={4} className="summary-title">
+              <ShoppingCartOutlined /> Order Total
+            </Title>
+            
+            <div className="summary-breakdown">
+              <div className="summary-row-pro">
+                <Text className="summary-label">Subtotal ({cart.length} items)</Text>
+                <Text strong className="summary-value">₹{total.toFixed(2)}</Text>
+              </div>
+              <div className="summary-row-pro">
+                <Text className="summary-label">Delivery Fee</Text>
+                <Text strong className="summary-value" style={{ color: deliveryFee === 0 ? '#4caf50' : '#212121' }}>
+                  {deliveryFee === 0 ? 'FREE' : `₹${deliveryFee.toFixed(2)}`}
+                </Text>
+              </div>
+              {total < 400 && (
+                <div className="free-delivery-banner">
+                  <GiftOutlined /> Add ₹{(400 - total).toFixed(2)} more for FREE delivery!
+                </div>
+              )}
             </div>
-            <div className="summary-row">
-              <Text>Delivery Fee</Text>
-              <Text strong style={{ color: deliveryFee === 0 ? '#4caf50' : undefined }}>
-                {deliveryFee === 0 ? 'FREE' : `₹${deliveryFee.toFixed(2)}`}
-              </Text>
+            
+            <Divider className="summary-divider" />
+            
+            <div className="summary-total">
+              <Text className="total-label">Amount Payable</Text>
+              <Title level={3} className="total-amount">₹{finalTotal.toFixed(2)}</Title>
             </div>
-            {total < 400 && (
-              <Text type="secondary" style={{ fontSize: '12px' }}>
-                Add ₹{(400 - total).toFixed(2)} more for free delivery
-              </Text>
-            )}
-            <Divider />
-            <div className="summary-row total-row">
-              <Title level={4} style={{ margin: 0 }}>Total</Title>
-              <Title level={4} style={{ margin: 0, color: '#4caf50' }}>₹{finalTotal.toFixed(2)}</Title>
+            
+            <div className="savings-badge">
+              <SafetyOutlined /> 100% Secure Checkout
             </div>
           </Card>
 
-          <Card className="checkout-info-card">
-            <Title level={5}>🚚 Delivery Information</Title>
-            <Text type="secondary">
-              • Estimated delivery: 30-45 minutes<br/>
-              • Free delivery on orders above ₹400<br/>
-              • Fresh vegetables guaranteed<br/>
-              • Cash on delivery available
-            </Text>
+          {/* Delivery Info Card */}
+          <Card className="checkout-info-card-pro">
+            <Title level={5} className="info-card-title">
+              <ClockCircleOutlined /> Delivery Information
+            </Title>
+            <Space direction="vertical" size="small" className="info-list">
+              <div className="info-item">
+                <CheckCircleOutlined className="info-icon" />
+                <Text>Estimated delivery: 30-45 minutes</Text>
+              </div>
+              <div className="info-item">
+                <CheckCircleOutlined className="info-icon" />
+                <Text>Free delivery on orders above ₹400</Text>
+              </div>
+              <div className="info-item">
+                <CheckCircleOutlined className="info-icon" />
+                <Text>Fresh vegetables guaranteed</Text>
+              </div>
+              <div className="info-item">
+                <CheckCircleOutlined className="info-icon" />
+                <Text>Cash on delivery available</Text>
+              </div>
+            </Space>
           </Card>
         </Col>
       </Row>

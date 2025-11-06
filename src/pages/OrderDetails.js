@@ -30,6 +30,7 @@ export default function OrderDetails() {
     }
     fetchOrder();
   }, [orderId]);
+console.log(order,'testing');
 
   if (loading) {
     return <div className="center-loader"><Spin size="large" /></div>;
@@ -38,7 +39,7 @@ export default function OrderDetails() {
   if (!order) {
     return (
       <div className="orders-container">
-        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => nav('/orders')} style={{ marginBottom: 16 }}>
+        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => nav(-1)} style={{ marginBottom: 16 }}>
           Back to Orders
         </Button>
         <Card><Text>Order not found.</Text></Card>
@@ -60,7 +61,7 @@ export default function OrderDetails() {
   return (
     <div className="orders-container">
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 24 }}>
-        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => nav('/admin/orders')} style={{ marginRight: 16 }}>
+        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => nav(-1)} style={{ marginRight: 16 }}>
           Back to Orders
         </Button>
         <Title level={2} style={{ margin: 0 }}>Order #{order.order_id}</Title>

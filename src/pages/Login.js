@@ -28,6 +28,8 @@ export default function Login() {
       if (!res.ok) throw new Error(data.error || "Login failed");
 
       localStorage.setItem("user", JSON.stringify(data));
+      // Notify the app that the user object changed (same-tab update)
+      window.dispatchEvent(new Event('userChanged'));
       hide();
       message.success(`Welcome back, ${data.name || "user"}!`, 2);
 
