@@ -68,11 +68,25 @@ export default function AdminDashboard() {
       if (categoryFilter) params.append('category', categoryFilter);
       const qs = params.toString();
       const res = await fetch(`${config.baseURL}/api/products${qs ? `?${qs}` : ''}`);
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
       const data = await res.json();
-      setProducts(data);
+      
+      // Ensure data is an array
+      if (Array.isArray(data)) {
+        setProducts(data);
+      } else {
+        console.error('Products data is not an array:', data);
+        setProducts([]);
+        message.error('Invalid data format received from server');
+      }
     } catch (err) {
       console.error('Error loading products:', err);
-      message.error('Failed to load products');
+      setProducts([]); // Set empty array on error
+      message.error('Failed to load products: ' + err.message);
     }
   }
 
