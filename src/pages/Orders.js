@@ -27,7 +27,7 @@ export default function Orders() {
         if (response.ok) {
           const data = await response.json();
         const sortedOrders = data.sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    (a, b) => new Date(b.created_at) - new Date(a.created_at)
   );
 
   // hapy
