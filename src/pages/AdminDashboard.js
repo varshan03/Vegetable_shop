@@ -47,6 +47,7 @@ export default function AdminDashboard() {
   const [previewTitle, setPreviewTitle] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [imgBust, setImgBust] = useState(0);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState();
   const nav = useNavigate();
@@ -133,7 +134,7 @@ const productColumns = [
         height={60}
         src={
           image_url
-            ? `${config.baseURL}${image_url}` // 🔹 Adjust this base URL to match your backend
+            ? `${config.baseURL}${image_url}?t=${imgBust}`
             : "https://via.placeholder.com/60"
         }
         alt="Product"
@@ -218,7 +219,7 @@ const productColumns = [
         uid: '-1',
         name: 'current-image',
         status: 'done',
-        url: `${config.baseURL}${product.image_url}`,
+        url: `${config.baseURL}${product.image_url}?t=${imgBust}`,
       }]);
     } else {
       setFileList([]);
@@ -386,35 +387,62 @@ const productColumns = [
           onFinish={async (values) => {
             try {
               const formData = new FormData();
+              
+              // Append all form values to formData
               Object.entries(values).forEach(([key, value]) => {
-                formData.append(key, value);
+                // Skip appending null or undefined values
+                if (value !== null && value !== undefined) {
+                  formData.append(key, value);
+                }
               });
               
+              // Handle file upload if a new file was selected
               const selectedFile = (fileList && fileList[0] && fileList[0].originFileObj)
                 ? fileList[0].originFileObj
                 : imageFile;
+                
               if (selectedFile) {
                 formData.append('image', selectedFile, selectedFile.name || 'upload.jpg');
+              } else if (editingProduct && editingProduct.image_url) {
+                // If no new image is selected but there's an existing image, ensure we keep it
+                formData.append('keep_existing_image', 'true');
               }
-              console.log(formData);
-              console.log(imageFile)
+              
+              // Set the correct URL and method based on whether we're creating or updating
               const url = editingProduct 
                 ? `${config.baseURL}/api/products/${editingProduct.id}`
                 : `${config.baseURL}/api/products`;
               
               const method = editingProduct ? 'PUT' : 'POST';
               
+              // Add auth token if available
+              const token = localStorage.getItem('token');
+              const headers = {};
+              if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+              }
+              
+              // Log the form data for debugging
+              for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
+              }
+              
               const res = await fetch(url, {
                 method,
+                headers,
                 body: formData,
                 // Don't set Content-Type header - let the browser set it with the correct boundary
               });
-
+              
+              const result = await res.json();
+              
               if (!res.ok) {
-                throw new Error('Failed to save product');
+                throw new Error(result.message || 'Failed to save product');
               }
 
+
               message.success(`Product ${editingProduct ? 'updated' : 'added'} successfully`);
+              setImgBust(Date.now());
               setModalVisible(false);
               form.resetFields();
               setFileList([]);

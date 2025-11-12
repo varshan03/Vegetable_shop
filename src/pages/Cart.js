@@ -107,9 +107,11 @@ export default function Cart() {
                     <Text>Price: ₹{Number(item.price).toFixed(2)}</Text>
                     <div className="cart-item-actions">
                       <InputNumber
-                        min={1}
+                        min={0.5}
+                        step={0.5}
+                        precision={2}
                         value={item.quantity}
-                        onChange={(value) => changeQty(item.product_id, value)}
+                        onChange={(value) => changeQty(item.product_id, value ?? 0.5)}
                       />
                       <Button
                         danger
@@ -130,7 +132,7 @@ export default function Cart() {
               <Title level={4}>Order Summary</Title>
               <div className="summary-row">
                 <Text>Subtotal</Text>
-                <Text>₹{total}</Text>
+                <Text>₹{total.toFixed(2)}</Text>
               </div>
               <div className="summary-row">
                 <Text>Shipping</Text>
@@ -138,7 +140,7 @@ export default function Cart() {
               </div>
               <div className="summary-row total-row">
                 <Title level={5}>Total</Title>
-                <Title level={5}>₹{total}</Title>
+                <Title level={5}>₹{total.toFixed(2)}</Title>
               </div>
               {/* <TextArea 
                 rows={4} 
