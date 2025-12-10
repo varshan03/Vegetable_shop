@@ -8,6 +8,7 @@ import Checkout from './pages/Checkout';
 import AdminDashboard from "./pages/AdminDashboard";
 import Users from "./pages/Users";
 import AdminOrders from './pages/AdminOrders';
+import Billing from './pages/Billing';
 import DeliveryApp from './pages/DeliveryApp';
 import Orders from './pages/Orders';
 import DeliveryTracking from './pages/DeliveryTracking';
@@ -132,6 +133,17 @@ function App() {
           element={
             user && user.role === 'admin' ? (
               <AdminOrders />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/admin/billing"
+          element={
+            user && user.role === 'admin' ? (
+              <Billing />
             ) : (
               <Navigate to="/" replace />
             )

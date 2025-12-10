@@ -258,6 +258,14 @@ const productColumns = [
             </Button>
             <Button 
               type="primary" 
+              icon={<PlusOutlined />}
+              onClick={() => nav('/admin/billing')}
+              style={{ marginRight: 8 }}
+            >
+              Billing
+            </Button>
+            <Button 
+              type="primary" 
               icon={<ShoppingCartOutlined />}
               onClick={() => nav('/admin/orders')}
               style={{ marginRight: 8 }}
