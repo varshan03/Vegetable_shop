@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Button, Row, Col, Typography, message, Badge, Input, Tag, Divider, Drawer } from "antd";
 import { ShoppingCartOutlined, LogoutOutlined, UnorderedListOutlined, SearchOutlined, UserOutlined, HeartOutlined, StarFilled, MenuOutlined } from "@ant-design/icons";
+import ContactFooter from "../Components/ContactFooter";
 import config from "../server";
 import "../theme.css";
 import logoImg from "../Images/logo.jpg";
@@ -355,9 +356,14 @@ export default function CustomerHome() {
         )}
       </div>
 
+      {/* Contact Footer */}
+      <div style={{ padding: '0 16px' }}>
+        <ContactFooter />
+      </div>
+
       {/* ---------- Footer ---------- */}
       <footer className="ecommerce-footer">
-        <Text type="secondary">© 2024 RR Fresh Delivery - Fresh Vegetables & More</Text>
+        <Text type="secondary">© 2025 RR Fresh Delivery - Fresh Vegetables & More</Text>
       </footer>
     </div>
   );

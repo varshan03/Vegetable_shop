@@ -29,6 +29,7 @@ import {
   ShoppingCartOutlined,
   UserOutlined
 } from "@ant-design/icons";
+import ContactFooter from "../Components/ContactFooter";
 import config from "../server";
 import "../App.css";
 import "../theme.css";
@@ -583,6 +584,11 @@ const productColumns = [
       >
         <img alt="preview" style={{ width: '100%' }} src={previewImage} />
       </Modal>
+      
+      {/* Contact Footer */}
+      <div style={{ padding: '0 16px', marginTop: '24px' }}>
+        <ContactFooter />
+      </div>
     </div>
   );
 }

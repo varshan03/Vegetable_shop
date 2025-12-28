@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Button, Typography, List, Divider, Row, Col, Form, Input, Radio, message, Steps, Progress, Space, Tag } from 'antd';
 import { ShoppingCartOutlined, CreditCardOutlined, HomeOutlined, CheckCircleOutlined, EnvironmentOutlined, SafetyOutlined, ClockCircleOutlined, GiftOutlined } from '@ant-design/icons';
+import ContactFooter from '../Components/ContactFooter';
 import config from '../server';
 import '../theme.css';
 
@@ -10,40 +11,10 @@ const { Title, Text } = Typography;
 export default function Checkout(){
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [location, setLocation] = useState({ latitude: null, longitude: null, error: null });
   const [form] = Form.useForm();
   const nav = useNavigate();
   const cart = JSON.parse(localStorage.getItem('cart') || '[]');
   const user = JSON.parse(localStorage.getItem('user') || 'null');
-
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            error: null,
-          });
-        },
-        (error) => {
-          setLocation({
-            latitude: null,
-            longitude: null,
-            error: 'Unable to retrieve your location. Please enable location services for better delivery experience.'
-          });
-          console.error('Geolocation error:', error);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-      );
-    } else {
-      setLocation({
-        latitude: null,
-        longitude: null,
-        error: 'Geolocation is not supported by your browser.'
-      });
-    }
-  }, []);
 
   async function placeOrder(values){
     if (!user) { 
@@ -60,18 +31,23 @@ export default function Checkout(){
     }));
     
     try {
+      // Construct full address from form fields
+      const fullAddress = `${values.houseNo}, ${values.street}, ${values.landmark ? values.landmark + ', ' : ''}${values.area}, ${values.city}, ${values.pincode}`;
+      
       const orderData = {
         user_id: user.id,
         items,
-        delivery_address: values.address,
+        delivery_address: fullAddress,
+        address_details: {
+          houseNo: values.houseNo,
+          street: values.street,
+          landmark: values.landmark,
+          area: values.area,
+          city: values.city,
+          pincode: values.pincode
+        },
         payment_method: values.paymentMethod,
       };
-
-      // Add location if available
-      if (location.latitude && location.longitude) {
-        orderData.latitude = location.latitude;
-        orderData.longitude = location.longitude;
-      }
 
       const res = await fetch(`${config.baseURL}/api/orders`, {
         method: 'POST', 
@@ -230,34 +206,89 @@ export default function Checkout(){
                 paymentMethod: 'cod'
               }}
             >
-              {location.latitude && location.longitude && (
-                <div className="location-success-banner">
-                  <EnvironmentOutlined /> Location detected successfully
-                  <Tag color="success" style={{ marginLeft: '8px' }}>Accurate</Tag>
-                </div>
-              )}
-              {location.error && (
-                <div className="location-error-banner">
-                  <EnvironmentOutlined /> {location.error}
-                </div>
-              )}
-              
               <Form.Item
                 label={
                   <Space>
                     <HomeOutlined />
-                    <span>Complete Delivery Address</span>
+                    <span>House / Flat No.</span>
                   </Space>
                 }
-                name="address"
-                rules={[{ required: true, message: 'Please enter your delivery address!' }]}
+                name="houseNo"
+                rules={[{ required: true, message: 'Please enter house/flat number!' }]}
               >
-                <Input.TextArea
-                  rows={4}
-                  placeholder="House/Flat No., Building Name, Street, Landmark, Area, City, Pincode"
-                  className="checkout-textarea"
+                <Input
+                  placeholder="House/Flat No., Building Name"
+                  className="checkout-input"
                 />
               </Form.Item>
+
+              <Form.Item
+                label="Street / Road Name"
+                name="street"
+                rules={[{ required: true, message: 'Please enter street name!' }]}
+              >
+                <Input
+                  placeholder="Street / Road Name"
+                  className="checkout-input"
+                />
+              </Form.Item>
+
+              <Row gutter={[16, 16]}>
+                <Col xs={24} sm={12}>
+                  <Form.Item
+                    label="Landmark (Optional)"
+                    name="landmark"
+                  >
+                    <Input
+                      placeholder="e.g., Near Hospital, Market"
+                      className="checkout-input"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item
+                    label="Area / Locality"
+                    name="area"
+                    rules={[{ required: true, message: 'Please enter area/locality!' }]}
+                  >
+                    <Input
+                      placeholder="Area / Locality"
+                      className="checkout-input"
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={[16, 16]}>
+                <Col xs={24} sm={12}>
+                  <Form.Item
+                    label="City / Town"
+                    name="city"
+                    rules={[{ required: true, message: 'Please enter city!' }]}
+                  >
+                    <Input
+                      placeholder="City / Town"
+                      className="checkout-input"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item
+                    label="Pincode"
+                    name="pincode"
+                    rules={[
+                      { required: true, message: 'Please enter pincode!' },
+                      { pattern: /^[0-9]{6}$/, message: 'Pincode must be 6 digits!' }
+                    ]}
+                  >
+                    <Input
+                      placeholder="Enter 6-digit pincode"
+                      maxLength="6"
+                      className="checkout-input"
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
 
               {/* Payment Method Card */}
               <Divider />
@@ -375,6 +406,11 @@ export default function Checkout(){
           </Card>
         </Col>
       </Row>
+      
+      {/* Contact Footer */}
+      <div style={{ padding: '0 16px', marginTop: '24px' }}>
+        <ContactFooter />
+      </div>
     </div>
   );
 }

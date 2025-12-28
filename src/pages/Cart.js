@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Typography, InputNumber, message, Card, Input } from "antd";
 import { DeleteOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+import ContactFooter from "../Components/ContactFooter";
 import config from "../server";
 import "../theme.css";
 
@@ -156,6 +157,11 @@ export default function Cart() {
           </div>
         </div>
       )}
+      
+      {/* Contact Footer */}
+      <div style={{ padding: '0 16px' }}>
+        <ContactFooter />
+      </div>
     </div>
   );
 }

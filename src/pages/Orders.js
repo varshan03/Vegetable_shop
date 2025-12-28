@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Spin, Typography, message, List, Tag, Avatar, Button, Space } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
+import ContactFooter from "../Components/ContactFooter";
 import config from "../server";
 import "../theme.css";
 
@@ -125,6 +126,11 @@ export default function Orders() {
           }}
         />
       )}
+      
+      {/* Contact Footer */}
+      <div style={{ padding: '0 16px', marginTop: '24px' }}>
+        <ContactFooter />
+      </div>
     </div>
   );
 }

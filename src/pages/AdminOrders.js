@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Table, Button, Space, Typography, message, Tag, Select, Modal } from 'antd';
 import { ArrowLeftOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import ContactFooter from '../Components/ContactFooter';
 import config from '../server';
 
 const { Title } = Typography;
@@ -186,6 +187,11 @@ export default function AdminOrders() {
           ))}
         </Select>
       </Modal>
+      
+      {/* Contact Footer */}
+      <div style={{ padding: '0 16px', marginTop: '24px' }}>
+        <ContactFooter />
+      </div>
     </div>
   );
 }
